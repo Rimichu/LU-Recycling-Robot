@@ -79,7 +79,7 @@ on classify done:
 
 - Matias Barandiaran ([mbaranr](https://github.com/m4mbo))
 - Parichay Sachdev ([RedHatParichay](https://github.com/RedHatParichay))
-- Mustafa Azizi
+- Mustafa Azizi ([MuAzi04](https://github.com/MuAzi04))
 - Athar Syed
 - Osvaldo Catine
 - Mikelis Kamepe
