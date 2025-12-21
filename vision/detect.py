@@ -54,7 +54,7 @@ def process_frame(frame, model):
     # Draw a red dot at the center of the rectangle
     cv2.circle(frame, (x_mid, y_mid), 5, (0, 0, 255), -1)
 
-    # If the rectangle's center is close to the middle of the frame, set "True"
+    # If the rectangle's center is close to the middle of the frame, set "True".
     if abs(x_pixel - frame_mid_x) < 10000:  # 50 pixel proximity tolerance
         is_detected = True
 
