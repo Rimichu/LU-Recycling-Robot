@@ -2,7 +2,7 @@
 
 For a demo and more information, see [page](https://mbaranr.github.io/projects/waste_sorting/).
 
-## Conda
+## Installing Dependencies
 
 ```
 $ cd waste-sorter
