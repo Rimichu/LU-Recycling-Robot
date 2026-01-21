@@ -1,9 +1,14 @@
-import bluetooth
+# import bluetooth
+import socket
 
-server_address = "B8:27:EB:9A:19:C0" 
-port = 1 
+# server_address = "B8:27:EB:9A:19:C0" 
+# port = 1 
 
-rp_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+server_address = "10.42.0.83"
+port = 5050
+
+# rp_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+rp_socket = socket.socket()
 
 try:
     rp_socket.connect((server_address, port))
@@ -17,7 +22,7 @@ try:
         try:
             angle = int(angle)
             if 0 <= angle <= 180:
-                rp_socket.send(str(angle))
+                rp_socket.send(str(angle).encode("utf-8"))
                 print(f"Sent angle: {angle}")
             else:
                 print("Please enter a valid angle between 0 and 180.")

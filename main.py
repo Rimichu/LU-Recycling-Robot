@@ -2,19 +2,24 @@ from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
 import cv2
 import torch
-import bluetooth
+# import bluetooth
+import socket
 
 if __name__ == "__main__":
-    server_address = "B8:27:EB:9A:19:C0"  # raspberry pi server (claw)
-    port = 1
+    # server_address = "B8:27:EB:9A:19:C0"  # raspberry pi server (claw)
+    # port = 1
+    server_address = "10.42.0.19" # Raspberry pi's IP address
+    port = 5050
 
-    robot = KukaRobot("192.168.128.195")
+    robot = KukaRobot("192.168.1.195") # Kuka robot
     robot.connect()
     robot.set_speed(1)
 
-    rp_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
-    rp_socket.connect((server_address, port))
+    # rp_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    # rp_socket = socket.socket()
+    # rp_socket.connect((server_address, port))
     print(f"Connected to the raspberrypi server at {server_address}")
+    rp_socket = None
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 

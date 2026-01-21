@@ -138,7 +138,7 @@ class ControlPanel(tk.Tk):
             queuemove(
                 self.eloop,
                 self.robot,
-                lambda: self.robot.goto(x=x_mm, y=y_mm, z=CLASSIFY_HEIGHT),
+                lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
             self.eloop.run(

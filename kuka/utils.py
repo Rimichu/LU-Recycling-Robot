@@ -16,25 +16,30 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel):
 
     x_obj_mid = x_pixel + (w_pixel/2)
     y_obj_mid = y_pixel + (h_pixel/2)
+
+    x_mm = x_obj_mid
+    y_mm = y_obj_mid
+    w_mm = w_pixel
+    h_mm = h_pixel
     
-    x_ratio = (x_obj_mid/1080)
-    y_ratio = (y_obj_mid/1920)
+    # x_ratio = (x_obj_mid/1080)
+    # y_ratio = (y_obj_mid/1920)
 
-    if x_ratio != 0.5:
-        x_ratio -= 0.5
-    else:
-        x_ratio = 0
+    # if x_ratio != 0.5:
+    #     x_ratio -= 0.5
+    # else:
+    #     x_ratio = 0
 
-    if y_ratio != 0.5:
-        y_ratio -= 0.5
-    else:
-        y_ratio = 0
+    # if y_ratio != 0.5:
+    #     y_ratio -= 0.5
+    # else:
+    #     y_ratio = 0
 
-    x_delta = w_mm*x_ratio
-    y_delta = h_mm*y_ratio
+    # x_delta = w_mm*x_ratio
+    # y_delta = h_mm*y_ratio
 
-    x_mm = HOME_POS[0] + x_delta
-    y_mm = HOME_POS[1] + y_delta
+    # x_mm = HOME_POS[0] + x_delta
+    # y_mm = HOME_POS[1] + y_delta
 
     return x_mm, y_mm, w_mm, h_mm
 
