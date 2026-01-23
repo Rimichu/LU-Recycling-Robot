@@ -67,7 +67,15 @@ def handle_client(client_socket, client_address):
         if not data:
             break
         print(f"Received data: {data.decode('utf-8')}")
-        set_angle(pwm, pin, float(data.decode("utf-8")))
+        if data.decode("utf-8") == "exit":
+            print("Exit command received. Closing connection.")
+            client_socket.close()
+            break
+        # if data.decode("utf-8").startswith("angle:"):
+        set_angle(pwm, pin, float(data.decode("utf-8").split(":")[1]))
+        if data.decode("utf-8").startswith("ping"):
+            print("Ping received, sending pong...")
+            client_socket.sendall(b"pong")
     # finally:
         # Stop LED pattern when client disconnects
         # led_stop_event.set()
