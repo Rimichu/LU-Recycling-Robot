@@ -2,11 +2,11 @@
 Description=rpi-server
 
 [Service]
-ExecStartPre=/bin/mkdir -p /home/kuka/repos/waste-sorter/local
-ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/repos/waste-sorter/rp/ /home/kuka/repos/waste-sorter/local/
-ExecStart=/usr/bin/python -u "/home/kuka/repos/waste-sorter/rp/server.py"
+ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
+ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/LU-Recycling-Robot/rp/ /home/kuka/LU-Recycling-Robot/local/
+ExecStart=/usr/bin/python -u "/home/kuka/LU-Recycling-Robot/local/server.py"
 
-WorkingDirectory=/home/kuka/repos/waste-sorter/rp
+WorkingDirectory=/home/kuka/LU-Recycling-Robot/local
 Restart=always
 
 [Install]
