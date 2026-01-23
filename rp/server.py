@@ -135,10 +135,8 @@ if __name__ == "__main__":
     HOST = "0.0.0.0" # Listen on all interfaces
     PORT = 5050      # Arbitrary non-privileged port
 
-    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server_socket.bind((HOST, PORT))
-    server_socket.listen(1)
-    print(f"Server is listening on {HOST}:{PORT}")
+    server_socket = socket.create_server((HOST, PORT))
+    print(f"Server created at {HOST}:{PORT}")
 
     try:
         while_loop(server_socket)
