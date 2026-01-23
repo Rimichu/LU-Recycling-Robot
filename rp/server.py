@@ -1,8 +1,46 @@
 import bluetooth
 import RPi.GPIO as GPIO
 from servo import set_angle
+import time
+import threading
 
 # TODO: See if handle_client can be made async
+# TODO: See if led_pattern_loop can be made async
+
+# LED configuration
+LED_PIN = 42  # RPi 5 onboard LED (GPIO 42)
+
+def flash_led_pattern():
+    """
+    Flash the onboard LED with the pattern:
+    5 fast blinks, then 5 seconds on, then 1 second off (repeats).
+    
+    :return: None
+    """
+    # 5 fast blinks
+    for _ in range(5):
+        GPIO.output(LED_PIN, GPIO.HIGH)
+        time.sleep(0.2)
+        GPIO.output(LED_PIN, GPIO.LOW)
+        time.sleep(0.2)
+    
+    # 5 seconds on
+    GPIO.output(LED_PIN, GPIO.HIGH)
+    time.sleep(5)
+    
+    # 1 second off
+    GPIO.output(LED_PIN, GPIO.LOW)
+    time.sleep(1)
+
+def led_pattern_loop(stop_event):
+    """
+    Continuously run the LED flash pattern until stop_event is set.
+    
+    :param stop_event: threading.Event to signal when to stop the loop
+    :return: None
+    """
+    while not stop_event.is_set():
+        flash_led_pattern()
 
 def handle_client(client_socket, client_address):
     """
@@ -15,12 +53,24 @@ def handle_client(client_socket, client_address):
     """
 
     print(f"Accepted connection from {client_address}")
-    while True:
-        # Receive data from the client
-        data = client_socket.recv(1024)  # Receive up to 1024 bytes
-        if not data:
-            break
-        set_angle(pwm, pin, float(data.decode("utf-8")))
+    
+    # Start LED flashing pattern in a separate thread
+    led_stop_event = threading.Event()
+    led_thread = threading.Thread(target=led_pattern_loop, args=(led_stop_event,), daemon=True)
+    led_thread.start()
+    
+    try:
+        while True:
+            # Receive data from the client
+            data = client_socket.recv(1024)  # Receive up to 1024 bytes
+            if not data:
+                break
+            set_angle(pwm, pin, float(data.decode("utf-8")))
+    finally:
+        # Stop LED pattern when client disconnects
+        led_stop_event.set()
+        GPIO.output(LED_PIN, GPIO.LOW)
+        led_thread.join(timeout=2)
 
 def while_loop(server_socket):
     """
@@ -47,6 +97,10 @@ def while_loop(server_socket):
 if __name__ == "__main__":
     # Set GPIO numbering mode
     GPIO.setmode(GPIO.BOARD)
+
+    # Setup LED pin (onboard LED on RPi 5)
+    GPIO.setup(LED_PIN, GPIO.OUT)
+    GPIO.output(LED_PIN, GPIO.LOW)  # Start with LED off
 
     # TODO: Find out what kind of servo motor this was, may need to add another pin to allow motor to move in both directions
     # Setup servo pin
