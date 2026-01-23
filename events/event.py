@@ -2,13 +2,25 @@ from enum import Enum
 from queue import Queue, Empty as QueueEmpty
 from typing import Any, Callable, Literal, NamedTuple, Union
 
-
 class EventType(Enum):
+    """
+    Event types for the event loop.
+
+    Sleep: wait for a duration before next event.
+        Param: duration in milliseconds.
+    
+    Func: execute a function immediately.
+        Param: function to execute.
+    
+    SleepUntil: wait until a condition function returns True before next event.
+        Param: condition function to evaluate.
+    """
+
     SLEEP = 1
     FUNC = 2
     SLEEP_UNTIL = 3
 
-
+'Event data structure.'
 class Event(NamedTuple):
     type: EventType
     data: dict
@@ -57,6 +69,7 @@ class EventLoop:
         self.run(func)
         self.sleep_until(condition)
 
+    ' Continually check the condition function until it returns True.'
     def _sleep_until(self, func: Callable[[], bool]):
         result = func()
         if result:
