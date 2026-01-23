@@ -4,6 +4,9 @@ dataset/
 checkpoints/*
 __pycache__/
 
+# Private token
+.token
+
 # Ignore macOS system files
 .DS_Store
 .AppleDouble
