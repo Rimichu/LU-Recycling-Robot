@@ -10,4 +10,4 @@ WorkingDirectory=~/home/kuka/LU-Recycling-Robot/local
 Restart=always
 
 [Install]
-WantedBy=default.target
+WantedBy=multi-user.target
