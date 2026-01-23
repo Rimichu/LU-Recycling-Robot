@@ -13,3 +13,6 @@ __pycache__/
 .venv
 poetry.lock
 pyproject.toml
+
+# Ignore Pi specific files
+local/
