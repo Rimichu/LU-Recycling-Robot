@@ -1,13 +1,25 @@
+# File stored in dir /etc/systemd/system/rpi-server.service
 [Unit]
 Description=rpi-server
+After=network-online.target
+Wants=network-online.target
 
 [Service]
-ExecStartPre=/bin/mkdir -p ~/home/kuka/LU-Recycling-Robot/local
-ExecStartPre=/usr/bin/rsync -av --checksum --delete ~/home/kuka/LU-Recycling-Robot/rp/ /home/kuka/LU-Recycling-Robot/local/
-ExecStart=/usr/bin/python -u "~/home/kuka/LU-Recycling-Robot/local/server.py"
+Type=simple
+User=kuka
+WorkingDirectory=/home/kuka/LU-Recycling-Robot/local
 
-WorkingDirectory=~/home/kuka/LU-Recycling-Robot/local
+# Ensure local/ exists
+ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
+
+# Sync rp/ -> local/ on every start
+ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/LU-Recycling-Robot/rp/ /home>
+
+# Run from local
+ExecStart=/usr/bin/python -u "/home/kuka/LU-Recycling-Robot/local/server.py"
+
 Restart=always
+RestartSec=2
 
 [Install]
 WantedBy=multi-user.target

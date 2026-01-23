@@ -65,6 +65,7 @@ def handle_client(client_socket, client_address):
         data = client_socket.recv(1024)  # Receive up to 1024 bytes
         if not data:
             break
+        print(f"Received data: {data.decode('utf-8')}")
         set_angle(pwm, pin, float(data.decode("utf-8")))
     # finally:
         # Stop LED pattern when client disconnects
@@ -74,7 +75,7 @@ def handle_client(client_socket, client_address):
 
 def while_loop(server_socket):
     """
-    Main server loop to accept incoming Bluetooth connections.
+    Main server loop to accept incoming TCP connections.
 
     :param server_socket: The server socket object
 
@@ -88,7 +89,7 @@ def while_loop(server_socket):
         client_socket, client_address = server_socket.accept()
         try:
             handle_client(client_socket, client_address)
-        except bluetooth.BluetoothError as e:
+        except OSError as e:
             print(f"Client disconnected: {e.strerror}")
         finally:
             # Close the sockets
@@ -110,16 +111,25 @@ if __name__ == "__main__":
     pwm = GPIO.PWM(pin, 50)
     pwm.start(0)
 
-    server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
+    # Old Bluetooth code
+    # server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
 
-    # Bind the socket to any available port on the Bluetooth adapter
-    port = bluetooth.PORT_ANY
-    server_socket.bind(("", port))
+    # # Bind the socket to any available port on the Bluetooth adapter
+    # port = bluetooth.PORT_ANY
+    # server_socket.bind(("", port))
 
-    # Start listening for incoming connections (backlog of 1)
+    # # Start listening for incoming connections (backlog of 1)
+    # server_socket.listen(1)
+    # bluetooth_address, server_port = server_socket.getsockname()
+    # print(f"Server is listening on Bluetooth address: {bluetooth_address}, port: {server_port}")
+
+    HOST = "0.0.0.0" # Listen on all interfaces
+    PORT = 5050      # Arbitrary non-privileged port
+
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_socket.bind((HOST, PORT))
     server_socket.listen(1)
-    bluetooth_address, server_port = server_socket.getsockname()
-    print(f"Server is listening on Bluetooth address: {bluetooth_address}, port: {server_port}")
+    print(f"Server is listening on {HOST}:{PORT}")
 
     try:
         while_loop(server_socket)
