@@ -2,6 +2,8 @@
 Description=rpi-server
 
 [Service]
+ExecStartPre=/bin/mkdir -p /home/kuka/repos/waste-sorter/local
+ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/repos/waste-sorter/rp/ /home/kuka/repos/waste-sorter/local/
 ExecStart=/usr/bin/python -u "/home/kuka/repos/waste-sorter/rp/server.py"
 
 WorkingDirectory=/home/kuka/repos/waste-sorter/rp
