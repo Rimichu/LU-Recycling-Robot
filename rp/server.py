@@ -1,4 +1,5 @@
-import bluetooth
+# import bluetooth
+import socket
 import RPi.GPIO as GPIO
 from servo import set_angle
 import time
