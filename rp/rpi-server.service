@@ -9,11 +9,16 @@ Type=simple
 User=kuka
 WorkingDirectory=/home/kuka/LU-Recycling-Robot/local
 
+# Starts the r-pi server; ensures that files are ran from a local save; reboot post git pull to restart server
+
 # Ensure local/ exists
 ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
 
 # Sync rp/ -> local/ on every start
 ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/LU-Recycling-Robot/rp/ /home/kuka/LU-Recycling-Robot/local/
+
+# If service file differs, copy from local to system and reload
+ExecStartPost=/bin/bash -c 'if ! cmp -s /etc/systemd/system/rpi-server.service /home/kuka/LU-Recycling-Robot/local/rpi-server.service; then cp /home/kuka/LU-Recycling-Robot/local/rpi-server.service /etc/systemd/system/rpi-server.service && systemctl daemon-reload && systemctl restart rpi-server; fi'
 
 # Run from local
 ExecStart=/usr/bin/python -u "/home/kuka/LU-Recycling-Robot/local/server.py"
