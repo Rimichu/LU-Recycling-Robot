@@ -72,7 +72,9 @@ def handle_client(client_socket, client_address):
             client_socket.close()
             break
         # if data.decode("utf-8").startswith("angle:"):
-        set_angle(pwm, pin, float(data.decode("utf-8").split(":")[1]))
+        print(float(data.decode("utf-8").split(":")[1]))
+        # For now I just want to know what angle values are being sent
+        # set_angle(PWM, ANTICLOCKWISE_PIN, CLOCKWISE_PIN, float(data.decode("utf-8").split(":")[1]))
         if data.decode("utf-8").startswith("ping"):
             print("Ping received, sending pong...")
             client_socket.sendall(b"pong")
@@ -114,11 +116,22 @@ if __name__ == "__main__":
 
     # TODO: Find out what kind of servo motor this was, may need to add another pin to allow motor to move in both directions
     # Setup servo pin
-    pin = 11
-    GPIO.setup(pin, GPIO.OUT)
+    # pin = 11
+    # GPIO.setup(pin, GPIO.OUT)
 
-    pwm = GPIO.PWM(pin, 50)
-    pwm.start(0)
+    # pwm = GPIO.PWM(pin, 50)
+    # pwm.start(0)
+
+    ANTICLOCKWISE_PIN = 16
+    CLOCKWISE_PIN = 18
+    PWM_PIN = 12
+
+    GPIO.setup(ANTICLOCKWISE_PIN, GPIO.OUT)
+    GPIO.setup(CLOCKWISE_PIN, GPIO.OUT)
+    GPIO.setup(PWM_PIN, GPIO.OUT)
+
+    PWM = GPIO.PWM(PWM_PIN, 50)
+    PWM.start(0)
 
     # Old Bluetooth code
     # server_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
