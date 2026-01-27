@@ -23,8 +23,6 @@ def queuemove(e: EventLoop, r: KukaRobot, func: Callable):
 
 
 def queuegrip(e: EventLoop, command, rp_socket):
-    # DEBUG: print("Queueing grip command: ", command)
-    print("Queueing grip command: ", command)
     e.run(lambda: signal_grip(command, rp_socket))
     e.sleep(2000)
 
