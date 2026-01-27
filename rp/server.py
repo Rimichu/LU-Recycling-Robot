@@ -32,7 +32,7 @@ def handle_client(client_socket, client_address):
             client_socket.close()
             break
         # if data.decode("utf-8").startswith("angle:"):
-        print(float(data.decode("utf-8").split(":")[1]))
+        # print(float(data.decode("utf-8").split(":")[1]))
         # For now I just want to know what angle values are being sent
         # set_angle(PWM, ANTICLOCKWISE_PIN, CLOCKWISE_PIN, float(data.decode("utf-8").split(":")[1]))
         if data.decode("utf-8").startswith("ping"):
