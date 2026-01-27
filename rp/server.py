@@ -63,10 +63,11 @@ def while_loop(server_socket):
 
 if __name__ == "__main__":
     # Set GPIO numbering mode
-    lgpio.gpiochip_open(0)
+    h = lgpio.gpiochip_open(0)
 
-    lgpio.gpio_claim_output(const.CLOCKWISE_PIN)
-    lgpio.gpio_claim_output(const.ANTICLOCKWISE_PIN)
+    # Claim GPIOs as outputs and set initial state to LOW
+    lgpio.gpio_claim_output(h, const.CLOCKWISE_PIN, const.LOW)
+    lgpio.gpio_claim_output(h, const.ANTICLOCKWISE_PIN, const.LOW)
 
     HOST = "0.0.0.0" # Listen on all interfaces
     PORT = 5050      # Arbitrary non-privileged port
