@@ -1,24 +1,38 @@
 import lgpio
 import time
 
-def set_angle(pwm, pin, angle):
+def open_claw(h, anticlockwise_pin, clockwise_pin):
     """
-    Set the angle of a servo motor conncected to the specified pin.
-    The servo motor is then turned on for a short duration to reach the desired angle.
-    
-    :param pwm: The PWM instance controlling the servo.
-    :param pin: The GPIO pin number where the servo is connected.
-    :param angle: The desired angle to set the servo to (0-180 degrees).
+    Open the claw by rotating the servo motor anticlockwise.
+
+    :param h: The lgpio handle.
+    :param anticlockwise_pin: The GPIO pin number for anticlockwise rotation.
+    :param clockwise_pin: The GPIO pin number for clockwise rotation.
 
     :return: None
     """
 
-    # duty_cycle = 2 + (angle / 18)  # 2 to 12 is a common range for 0-180 degrees (but also dependant on servo)
-    
-    lgpio.gpio_write(pin, True)
-    pwm.ChangeDutyCycle(duty_cycle)
-    
-    time.sleep(0.5)
-    
-    lgpio.gpio_write(pin, False)
-    # pwm.ChangeDutyCycle(0)
+    lgpio.gpio_write(h, anticlockwise_pin, True)
+    lgpio.gpio_write(h, clockwise_pin, False)
+
+    time.sleep(1)  # Duration to open claw
+
+    lgpio.gpio_write(h, anticlockwise_pin, False)
+
+def close_claw(h, clockwise_pin, anticlockwise_pin):
+    """
+    Close the claw by rotating the servo motor clockwise.
+
+    :param h: The lgpio handle.
+    :param clockwise_pin: The GPIO pin number   for clockwise rotation.
+    :param anticlockwise_pin: The GPIO pin number for anticlockwise rotation.
+
+    :return: None
+    """
+
+    lgpio.gpio_write(h, clockwise_pin, True)
+    lgpio.gpio_write(h, anticlockwise_pin, False)
+
+    time.sleep(1)  # Duration to close claw
+
+    lgpio.gpio_write(h, clockwise_pin, False)

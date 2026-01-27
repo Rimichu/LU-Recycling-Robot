@@ -1,7 +1,7 @@
 # import bluetooth
 import socket
 import lgpio
-from servo import set_angle
+import servo
 import time
 import threading
 import pi_constants as const
@@ -27,17 +27,22 @@ def handle_client(client_socket, client_address):
         if not data:
             break
         print(f"Received data: {data.decode('utf-8')}")
-        if data.decode("utf-8") == "exit":
-            print("Exit command received. Closing connection.")
-            client_socket.close()
-            break
-        # if data.decode("utf-8").startswith("angle:"):
-        # print(float(data.decode("utf-8").split(":")[1]))
-        # For now I just want to know what angle values are being sent
-        # set_angle(PWM, ANTICLOCKWISE_PIN, CLOCKWISE_PIN, float(data.decode("utf-8").split(":")[1]))
-        if data.decode("utf-8").startswith("ping"):
-            print("Ping received, sending pong...")
-            client_socket.sendall(b"pong")
+        command = data.decode("utf-8")
+        match command:
+            case "exit":
+                print("Exit command received. Closing connection.")
+                client_socket.close()
+            case const.COMMAND_OPEN:
+                print("Open command received.")
+                servo.open_claw(h, const.ANTICLOCKWISE_PIN, const.CLOCKWISE_PIN)  # Open claw
+            case const.COMMAND_CLOSE:
+                print("Close command received.")
+                servo.close_claw(h, const.CLOCKWISE_PIN, const.ANTICLOCKWISE_PIN)      # Close claw
+            case _ if command.startswith("ping"):
+                print("Ping received, sending pong...")
+                client_socket.sendall(b"pong")
+            case _:
+                print("Unknown command received.")
 
 def while_loop(server_socket):
     """
