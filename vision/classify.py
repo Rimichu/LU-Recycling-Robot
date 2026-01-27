@@ -27,44 +27,40 @@ def classify_object(
     logits = model_c(img)
     dest_bin = int(torch.argmax(logits, dim=1).item())
     print("classify done: ", dest_bin, get_label(dest_bin))
-    eloop.run(lambda: print("b4 first move"))
+    eloop.run(lambda: print("Moving to Location"))
     queuemove(eloop, robot, lambda: robot.goto(a = 180, b = 0, c = 180))
-    eloop.run(lambda: print("after first move"))
 
     class_label.config(text=f"Object Type: {get_label(dest_bin)}")
     # move to object
-    eloop.run(lambda: print("b4 open grip"))
+    eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    eloop.run(lambda: print("after"))
     # move into position around/above object
+    eloop.run(lambda: print("Moving Down"))
     queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("down down down"))
     # close around object
+    eloop.run(lambda: print("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    eloop.run(lambda: print("grab grab"))
-    queuegrip(eloop, grip_angle, rp_socket)
     # move up
-    eloop.run(lambda: print("up we go"))
+    eloop.run(lambda: print("Going Up"))
     queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("now was that hard"))
+    eloop.run(lambda: print("Trash picked up"))
 
     bin_x, bin_y = BIN_DICT[dest_bin]
-    eloop.run(lambda: print("move to bin", bin_x, bin_y))
+    eloop.run(lambda: print("Moving to bin:", bin_x, bin_y))
     queuemove(eloop, robot, lambda: robot.goto(bin_x, bin_y))
-    eloop.run(lambda: print("back down time"))
+    eloop.run(lambda: print("Moving Down"))
     queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("DROP IT"))
+    eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    eloop.run(lambda: print("thanks"))
+    eloop.run(lambda: print("Moving Up"))
     queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("aaa"))
+    eloop.run(lambda: print("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    print("queue mh")
-    eloop.run(lambda: print("start move home"))
+    eloop.run(lambda: print("Moving Home"))
     queuemove(eloop, robot, lambda: movehome(robot))
-    eloop.run(lambda: print("back home"))
+    eloop.run(lambda: print("Arrived Home"))
     eloop.run(unlock)
-    eloop.run(lambda: print("ready to detect next"))
+    eloop.run(lambda: print("Ready to Detect"))
 
 def process_image(img):
     transform = transforms.Compose([
