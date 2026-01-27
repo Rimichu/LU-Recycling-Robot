@@ -3,17 +3,12 @@ from events.event import EventLoop
 from kuka.constants import HOME_POS, TOOL_ANGLE
 from kuka_comm_lib import KukaRobot
 import socket
+import rp.pi_constants as const
 
-
-def signal_grip(angle, rp_socket):
-    server_address = "10.42.0.83"
-    port = 5050
-    rp_socket = socket.socket()
-    rp_socket.connect((server_address, port))
-    if (angle < 0) or (angle > 90):
-        raise ValueError("Grip angle must be between 0 and 90 degrees")
-    rp_socket.send(str(angle).encode("utf-8"))
-
+def signal_grip(command, rp_socket):
+    if (command != const.COMMAND_OPEN) and (command != const.COMMAND_CLOSE):
+        raise ValueError("Incorrect command for grip signal")
+    rp_socket.send(command.encode("utf-8"))
 
 def queuemove(e: EventLoop, r: KukaRobot, func: Callable):
     def fun():
@@ -27,8 +22,8 @@ def queuemove(e: EventLoop, r: KukaRobot, func: Callable):
     e.run_and_wait(fun, fun2)
 
 
-def queuegrip(e: EventLoop, angle, rp_socket):
-    e.run(lambda: signal_grip(angle, rp_socket))
+def queuegrip(e: EventLoop, command, rp_socket):
+    e.run(lambda: signal_grip(command, rp_socket))
     e.sleep(2000)
 
 

@@ -6,8 +6,6 @@ import torch
 import socket
 
 if __name__ == "__main__":
-    # server_address = "B8:27:EB:9A:19:C0"  # raspberry pi server (claw)
-    # port = 1
     server_address = "10.42.0.218" # Raspberry pi's IP address
     port = 5050
 
@@ -15,7 +13,6 @@ if __name__ == "__main__":
     robot.connect()
     robot.set_speed(1)
 
-    # rp_socket = bluetooth.BluetoothSocket(bluetooth.RFCOMM)
     rp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     rp_socket.settimeout(10)
 

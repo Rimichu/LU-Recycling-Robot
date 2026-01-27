@@ -8,6 +8,7 @@ from vision.classify import classify_object
 from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
+import rp.pi_constants as const
 
 
 class ControlPanel(tk.Tk):
@@ -31,7 +32,7 @@ class ControlPanel(tk.Tk):
         self.rp_socket = rp_socket
 
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
-        queuegrip(self.eloop, 0, self.rp_socket)
+        queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
         self.eloop.run(self.free_lock)
         self.eloop.start()
 

@@ -9,6 +9,7 @@ from kuka.comms import movehome, queuegrip, queuemove
 import numpy as np
 from torchvision import transforms
 import tkinter as tk
+import rp.pi_constants as const
 
 def classify_object(
     model_c,
@@ -33,13 +34,13 @@ def classify_object(
     class_label.config(text=f"Object Type: {get_label(dest_bin)}")
     # move to object
     eloop.run(lambda: print("b4 open grip"))
-    queuegrip(eloop, 90, rp_socket)
+    queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
     eloop.run(lambda: print("after"))
     # move into position around/above object
     queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
     eloop.run(lambda: print("down down down"))
     # close around object
-    queuegrip(eloop, 0, rp_socket)
+    queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
     eloop.run(lambda: print("grab grab"))
     queuegrip(eloop, grip_angle, rp_socket)
     # move up
@@ -53,11 +54,11 @@ def classify_object(
     eloop.run(lambda: print("back down time"))
     queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
     eloop.run(lambda: print("DROP IT"))
-    queuegrip(eloop, 90, rp_socket)
+    queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
     eloop.run(lambda: print("thanks"))
     queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
     eloop.run(lambda: print("aaa"))
-    queuegrip(eloop, 0, rp_socket)
+    queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
     print("queue mh")
     eloop.run(lambda: print("start move home"))
     queuemove(eloop, robot, lambda: movehome(robot))
