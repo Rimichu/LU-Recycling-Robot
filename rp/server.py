@@ -1,6 +1,6 @@
 # import bluetooth
 import socket
-import RPi.GPIO as GPIO
+import lgpio
 from servo import set_angle
 import time
 import threading
@@ -63,10 +63,10 @@ def while_loop(server_socket):
 
 if __name__ == "__main__":
     # Set GPIO numbering mode
-    GPIO.setmode(GPIO.BOARD)
+    lgpio.gpiochip_open(0)
 
-    GPIO.setup(const.CLOCKWISE_PIN, GPIO.OUT)
-    GPIO.setup(const.ANTICLOCKWISE_PIN, GPIO.OUT)
+    lgpio.gpio_claim_output(const.CLOCKWISE_PIN)
+    lgpio.gpio_claim_output(const.ANTICLOCKWISE_PIN)
 
     HOST = "0.0.0.0" # Listen on all interfaces
     PORT = 5050      # Arbitrary non-privileged port
