@@ -1,4 +1,4 @@
-# File stored in dir /etc/systemd/system/rpi-server.service
+# /etc/systemd/system/rpi-server.service
 [Unit]
 Description=rpi-server
 After=network-online.target
@@ -9,22 +9,35 @@ Type=simple
 User=kuka
 WorkingDirectory=/home/kuka/LU-Recycling-Robot/local
 
-# Starts the r-pi server; ensures that files are ran from a local save; reboot post git pull to restart server
-
 # Ensure local/ exists
 ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
 
-# Sync rp/ -> local/ on every start (including this service file)
-ExecStartPre=/usr/bin/rsync -av --checksum --delete /home/kuka/LU-Recycling-Robot/rp/ /home/kuka/LU-Recycling-Robot/local/
+# Sync rp/ -> local/ on every start (exclude unit files)
+ExecStartPre=/usr/bin/rsync -av --checksum --delete \
+  --exclude='*.service' \
+  /home/kuka/LU-Recycling-Robot/rp/ \
+  /home/kuka/LU-Recycling-Robot/local/
 
-# If service file differs, copy from local to system and reload
-ExecStartPost=/bin/bash -c 'if ! cmp -s /etc/systemd/system/rpi-server.service /home/kuka/LU-Recycling-Robot/local/rpi-server.service; then cp /home/kuka/LU-Recycling-Robot/local/rpi-server.service /etc/systemd/system/rpi-server.service && systemctl daemon-reload && systemctl restart rpi-server; fi'
+# Self-update this unit safely:
+# - if repo unit differs, install it, daemon-reload, then exit 1 so systemd restarts using new unit
+ExecStartPre=/bin/bash -lc '\
+SRC=/home/kuka/LU-Recycling-Robot/rp/rpi-server.service; \
+DST=/etc/systemd/system/rpi-server.service; \
+if [ -f "$SRC" ] && ! cmp -s "$SRC" "$DST"; then \
+  install -m 0644 "$SRC" "$DST"; \
+  systemctl daemon-reload; \
+  exit 1; \
+fi'
 
 # Run from local
-ExecStart=/usr/bin/python -u "/home/kuka/LU-Recycling-Robot/local/server.py"
+ExecStart=/usr/bin/python3 -u /home/kuka/LU-Recycling-Robot/local/server.py
 
-Restart=always
+Restart=on-failure
 RestartSec=2
+
+# Avoid "Start request repeated too quickly" during a unit update
+StartLimitIntervalSec=30
+StartLimitBurst=10
 
 [Install]
 WantedBy=multi-user.target
