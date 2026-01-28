@@ -102,19 +102,19 @@ class ControlPanel(tk.Tk):
         self.z_label.place(x=880, y=450)
 
         self.a_label = tk.Label(self, text="A: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
-        self.a_label.place(x=720, y=550)
+        self.a_label.place(x=700, y=550)
 
         self.b_label = tk.Label(self, text="B: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
         self.b_label.place(x=800, y=550)
 
+        self.c_label = tk.Label(self, text="C: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
+        self.c_label.place(x=900, y=550)
+
         self.class_label = tk.Label(self, text="Object Type: ")
         self.class_label.place(x=250, y=500)
-
-        self.c_label = tk.Label(self, text="C: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
-        self.c_label.place(x=880, y=550)
         
         self.quit_button = tk.Button(self, text = "Quit Safely", bg = "red", fg = "white", font = ("Arial", 30), command = self.quit)
-        self.quit_button.place(x=900, y=500)
+        self.quit_button.place(x=700, y=600)
 
     # TODO: Implement safe quit button functionality
     def quit(self):
