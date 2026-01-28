@@ -173,6 +173,8 @@ class ControlPanel(tk.Tk):
         self.update_label(self.object_detected_label, "Object Detected : " + str(is_detected))
 
         print("Check if detected and lock free")
+        print("Lock status:", self.lock)
+        print("is_detected:", is_detected)
         if is_detected and not self.lock:
 
             # Begin critical section
