@@ -218,6 +218,7 @@ class ControlPanel(tk.Tk):
                     centered = True
                 else:
                     # Readjust position
+                    self.eloop.run(lambda: print("Adjusting position to center object"))
                     queuemove(
                         self.eloop,
                         self.robot,
