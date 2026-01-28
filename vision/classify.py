@@ -10,6 +10,7 @@ import numpy as np
 from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
+from gui.control_panel import free_lock, obtain_lock
 
 # TODO: Change function so that it only handles classification, movement should be in a separate function
 def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
@@ -36,14 +37,13 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     
     
 
-def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, grip_angle:float):
+def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, dest_bin, grip_angle:float):
     """
     Process the object by moving the robot to pick it up and place it in the appropriate bin
 
     :param rp_socket: Raspberry Pi socket for communication
     :param eloop: Event loop managing asynchronous operations
     :param robot: Kuka robot instance
-    :param unlock: Function to unlock the control panel
     :param dest_bin: Destination bin index
     :param grip_angle: Grip angle for the robot
         This is currently unused but may be useful in future implementations.
@@ -77,7 +77,7 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     eloop.run(lambda: print("Moving Home"))
     queuemove(eloop, robot, lambda: movehome(robot))
     eloop.run(lambda: print("Arrived Home"))
-    eloop.run(unlock)
+    free_lock()
     eloop.run(lambda: print("Ready to Detect"))
 
 

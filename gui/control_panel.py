@@ -35,7 +35,7 @@ class ControlPanel(tk.Tk):
         self.create_video_frame()
         self.create_labels()
 
-        self.lock = True
+        self.lock = True                # Init Lock as true to prevent processing before ready
 
         self.robot = robot
         self.eloop = EventLoop(self.after)
@@ -46,7 +46,7 @@ class ControlPanel(tk.Tk):
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
         queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
         
-        self.eloop.run(self.free_lock)
+        self.eloop.run(self.free_lock)  # Free lock as initial setup done
         self.eloop.start()
 
     def create_video_frame(self):
@@ -128,6 +128,19 @@ class ControlPanel(tk.Tk):
         """
         self.lock = False
 
+    def obtain_lock(self):
+        """
+        Obtain the lock to prevent processing of new objects.
+        
+        :param self: Self instance
+
+        :return: True if lock obtained, False otherwise
+        """
+        if not self.lock:
+            self.lock = True
+            return True
+        return False
+
     def update_label(self, label, text):
         """
         Update the text of a label.
@@ -175,10 +188,8 @@ class ControlPanel(tk.Tk):
         print("Check if detected and lock free")
         print("Lock status:", self.lock)
         print("is_detected:", is_detected)
-        if is_detected and not self.lock:
-
-            # Begin critical section
-            self.lock = True
+        # Begin critical section
+        if is_detected and self.obtain_lock():
             self.eloop.run(lambda: print("start while loop"))
             while True:
                 self.eloop.run(lambda: print("Classifying Object"))
@@ -217,7 +228,7 @@ class ControlPanel(tk.Tk):
                 )
 
             # Classify object and dispose of it
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), 0))
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, classify_object(model_c, cap, self.class_label), 0))
 
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
