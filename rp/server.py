@@ -1,9 +1,6 @@
-# import bluetooth
 import socket
 import lgpio
 import servo
-import time
-import threading
 import pi_constants as const
 
 # TODO: See if handle_client can be made async
@@ -67,7 +64,7 @@ def while_loop(server_socket):
             client_socket.close()
 
 if __name__ == "__main__":
-    # Set GPIO numbering mode
+    # Get handle to gpio pins
     h = lgpio.gpiochip_open(0)
 
     # Claim GPIOs as outputs and set initial state to LOW
@@ -83,4 +80,5 @@ if __name__ == "__main__":
     try:
         while_loop(server_socket)
     finally:
+        lgpio.gpiochip_close(h)
         server_socket.close()

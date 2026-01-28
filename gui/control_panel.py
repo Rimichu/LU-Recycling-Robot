@@ -12,13 +12,24 @@ import rp.pi_constants as const
 
 
 class ControlPanel(tk.Tk):
+    """
+    GUI Control Panel for the Waste Sorting Robot.
+    """
     eloop: EventLoop
 
     def __init__(self, robot: KukaRobot, rp_socket, title="Waste Sorter"):
+        """
+        Initialize the Control Panel GUI.
+
+        :param self: Self instance
+        :param robot: Robot instance for controlling the KUKA robot
+        :param rp_socket: Raspberry Pi socket for communication
+        :param title: Window title
+        """
         super().__init__()
 
-        self.title("Waste Sorter")  # set title of main window
-        self.geometry("1000x600")                #set size of main window
+        self.title("Waste Sorter")      # set title of main window
+        self.geometry("1200x600")       # set size of main window
         self.configure(bg="#2596be")
   
         self.create_video_frame()
@@ -31,12 +42,19 @@ class ControlPanel(tk.Tk):
 
         self.rp_socket = rp_socket
 
+        # Get robot to starting position
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
         queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
+        
         self.eloop.run(self.free_lock)
         self.eloop.start()
 
     def create_video_frame(self):
+        """
+        Create the video frame in the GUI.
+        
+        :param self: Self instance
+        """
         self.frame_video = tk.Frame(self, width=600, height=400, bg="#2596be")
         self.frame_video.grid(row=0, column=0, padx=10, pady=10)
 
@@ -44,6 +62,13 @@ class ControlPanel(tk.Tk):
         self.label_img.grid(row=0, column=0, padx=10, pady=10)
 
     def create_labels(self):
+        """
+        Create the labels in the GUI.
+        
+        :param self: Self instance
+        """
+
+        # Object Details Labels
         self.object_label = tk.Label(self, text="Object Details", bg="white", fg="black", font=("Arial", 25))
         self.object_label.place(x=750, y=50)
 
@@ -63,10 +88,9 @@ class ControlPanel(tk.Tk):
         self.object_width_label.place(x=850, y=250)
 
 
-
+        # Arm Position Labels
         self.arm_label = tk.Label(self, text="Arm Coordinates ", bg="white", fg="black", font=("Arial", 25))
         self.arm_label.place(x=720, y=350)
-
 
         self.x_label = tk.Label(self, text="X: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
         self.x_label.place(x=720, y=450)
@@ -89,18 +113,38 @@ class ControlPanel(tk.Tk):
         self.c_label = tk.Label(self, text="C: ", bg="#f08c64", fg="white", font=("Ubuntu", 18))
         self.c_label.place(x=880, y=550)
         
-        self.quit_buttpm = tk.Button(self, text = "Quit Safely", bg = "red", fg = "white", font = ("Arial", 30), command = self.quit)
+        self.quit_button = tk.Button(self, text = "Quit Safely", bg = "red", fg = "white", font = ("Arial", 30), command = self.quit)
+        self.quit_button.place(x=900, y=500)
 
+    # TODO: Implement safe quit button functionality
     def quit(self):
         pass
         
     def free_lock(self):
+        """
+        Free the lock to allow processing of new objects.
+        
+        :param self: Self instance
+        """
         self.lock = False
 
     def update_label(self, label, text):
+        """
+        Update the text of a label.
+        
+        :param self: Self instance
+        :param label: Label to update
+        :param text: New text for the label
+        """
         label.config(text=text)
     
     def update_pos_labels(self, current_pos):
+        """
+        Update the position labels with the current robot coordinates.
+        
+        :param self: Self instance
+        :param current_pos: Current position of the robot
+        """
         self.update_label(label=self.x_label, text=f"X: {current_pos.x}")
         self.update_label(label=self.y_label, text=f"Y: {current_pos.y}")
         self.update_label(label=self.z_label, text=f"Z: {current_pos.z}")
@@ -110,6 +154,14 @@ class ControlPanel(tk.Tk):
 
 
     def video_stream(self, cap: cv2.VideoCapture, model_d, model_c):
+        """
+        Video stream processing loop.
+
+        :param self: Self instance
+        :param cap: OpenCV VideoCapture object
+        :param model_d: Object detection model
+        :param model_c: Object classification model
+        """
         _, frame = cap.read()
 
         processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
@@ -120,7 +172,7 @@ class ControlPanel(tk.Tk):
 
         if is_detected and not self.lock:
 
-            print("In critical section...")
+            # print("In critical section...")
 
             self.lock = True
 

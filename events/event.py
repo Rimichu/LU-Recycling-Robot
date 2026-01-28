@@ -27,6 +27,9 @@ class Event(NamedTuple):
 
 
 class EventLoop:
+    """
+    Event loop to manage and process events sequentially.
+    """
     event_queue: Queue[Event]
     after: Callable[[Union[int, Literal["idle"]], Callable], Any]
 

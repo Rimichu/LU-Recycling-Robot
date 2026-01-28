@@ -1,5 +1,6 @@
 import lgpio
 import time
+import pi_constants as const
 
 def open_claw(h, anticlockwise_pin, clockwise_pin):
     """
@@ -12,12 +13,12 @@ def open_claw(h, anticlockwise_pin, clockwise_pin):
     :return: None
     """
 
-    lgpio.gpio_write(h, anticlockwise_pin, True)
-    lgpio.gpio_write(h, clockwise_pin, False)
+    lgpio.gpio_write(h, anticlockwise_pin, const.HIGH)
+    lgpio.gpio_write(h, clockwise_pin, const.LOW)
 
-    time.sleep(1)  # Duration to open claw
+    time.sleep(5)  # Duration to open claw
 
-    lgpio.gpio_write(h, anticlockwise_pin, False)
+    lgpio.gpio_write(h, anticlockwise_pin, const.LOW)
 
 def close_claw(h, clockwise_pin, anticlockwise_pin):
     """
@@ -30,9 +31,9 @@ def close_claw(h, clockwise_pin, anticlockwise_pin):
     :return: None
     """
 
-    lgpio.gpio_write(h, clockwise_pin, True)
-    lgpio.gpio_write(h, anticlockwise_pin, False)
+    lgpio.gpio_write(h, clockwise_pin, const.HIGH)
+    lgpio.gpio_write(h, anticlockwise_pin, const.LOW)
 
-    time.sleep(1)  # Duration to close claw
+    time.sleep(5)  # Duration to close claw
 
-    lgpio.gpio_write(h, clockwise_pin, False)
+    lgpio.gpio_write(h, clockwise_pin, const.LOW)
