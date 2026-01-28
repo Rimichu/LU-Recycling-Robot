@@ -2,13 +2,29 @@ import math
 from kuka.constants import *
 
 def calculate_base(angle_degrees, height):
+    """
+    Calculate the base length of a right triangle given an angle and height.
     
+    :param angle_degrees: Angle in degrees
+    :param height: Height of the triangle in mm(?not sure if mm is true whilst writing this?)
+    """
+
     angle_radians = math.radians(angle_degrees)
     base = height * math.tan(angle_radians)
     
     return base
 
 def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel):
+    """
+    Convert pixel coordinates and dimensions to millimeters.
+
+    :param x_pixel: X coordinate in pixels
+    :param y_pixel: Y coordinate in pixels
+    :param w_pixel: Width in pixels
+    :param h_pixel: Height in pixels
+
+    :return: Tuple of (x_mm, y_mm, w_mm, h_mm)
+    """
     # camera resolution 1080/1920
     # camera verticle angle 48, horizontal 28.5
     w_mm = calculate_base(CAM_X_ANG, DETECT_HEIGHT)
@@ -45,6 +61,14 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel):
 
 
 def width2angle(w_mm, l=10):
+    """
+    Convert width in mm to angle in degrees based on distance l.
+
+    :param w_mm: Width in millimeters
+    :param l: Distance from the object to the rotation point in cm
+    
+    :return: Angle in degrees
+    """
     w_cm = w_mm / 10
     rad = 2 * math.asin(w_cm / (2 * l))  # radians
     angle = math.degrees(rad)  # degrees

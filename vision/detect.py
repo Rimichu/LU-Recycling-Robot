@@ -2,6 +2,12 @@ import cv2
 import warnings
 
 def process_frame(frame, model):
+    """
+    Process a video frame to detect objects using the provided model.
+    
+    :param frame: Input video frame in BGR format
+    :param model: Object detection model
+    """
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     # Run model

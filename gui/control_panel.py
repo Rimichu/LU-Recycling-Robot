@@ -4,7 +4,7 @@ import cv2
 from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT
 from vision.detect import process_frame
-from vision.classify import classify_object
+from vision.classify import classify_object, process_object
 from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
@@ -29,7 +29,7 @@ class ControlPanel(tk.Tk):
         super().__init__()
 
         self.title("Waste Sorter")      # set title of main window
-        self.geometry("1200x600")       # set size of main window
+        self.geometry("1200x800")       # set size of main window
         self.configure(bg="#2596be")
   
         self.create_video_frame()
@@ -172,8 +172,7 @@ class ControlPanel(tk.Tk):
 
         if is_detected and not self.lock:
 
-            # print("In critical section...")
-
+            # Begin critical section
             self.lock = True
 
             self.update_label(self.object_x_label, "X : " + str(x_pixel))
@@ -194,18 +193,8 @@ class ControlPanel(tk.Tk):
                 lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
-            self.eloop.run(
-                lambda: classify_object(
-                    model_c,
-                    cap,
-                    self.rp_socket,
-                    0,
-                    self.eloop,
-                    self.robot,
-                    self.free_lock,
-                    self.class_label
-                )
-            )
+            dest_bin = self.eloop.run(lambda: classify_object(model_c, cap, self.class_label))
+            self.eloop.run(lambda: process_object(self.rp_socket, self.eloop, self.robot, self.free_lock, dest_bin, 0))
 
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
