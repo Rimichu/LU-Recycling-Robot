@@ -10,7 +10,6 @@ import numpy as np
 from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
-from gui.control_panel import free_lock, obtain_lock
 
 # TODO: Change function so that it only handles classification, movement should be in a separate function
 def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
