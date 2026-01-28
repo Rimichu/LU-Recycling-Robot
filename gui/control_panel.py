@@ -138,6 +138,7 @@ class ControlPanel(tk.Tk):
         """
         if not self.lock:
             self.lock = True
+            print("Lock obtained")
             return True
         return False
 
