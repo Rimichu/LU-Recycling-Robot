@@ -36,7 +36,7 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     
     
 
-def process_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, grip_angle:float):
+def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, grip_angle:float):
     """
     Process the object by moving the robot to pick it up and place it in the appropriate bin
 

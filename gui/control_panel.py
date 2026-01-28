@@ -4,7 +4,7 @@ import cv2
 from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT
 from vision.detect import process_frame
-from vision.classify import classify_object, process_object
+from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
@@ -175,26 +175,38 @@ class ControlPanel(tk.Tk):
             # Begin critical section
             self.lock = True
 
-            self.update_label(self.object_x_label, "X : " + str(x_pixel))
-            self.update_label(self.object_y_label, "Y : " + str(y_pixel))
-            self.update_label(self.object_height_label, "Height : " + str(h_pixel))
-            self.update_label(self.object_width_label, "Width : " + str(w_pixel))
+            while True:
+                self.update_label(self.object_x_label, "X : " + str(x_pixel))
+                self.update_label(self.object_y_label, "Y : " + str(y_pixel))
+                self.update_label(self.object_height_label, "Height : " + str(h_pixel))
+                self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
-            x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+                x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            self.update_label(self.object_x_label, "X :" + str(y_mm))
-            self.update_label(self.object_y_label, "Y :" + str(x_mm))
-            self.update_label(self.object_height_label, "Height :" + str(w_mm))
-            self.update_label(self.object_width_label, "Width :" + str(h_mm))
+                self.update_label(self.object_x_label, "X :" + str(y_mm))
+                self.update_label(self.object_y_label, "Y :" + str(x_mm))
+                self.update_label(self.object_height_label, "Height :" + str(w_mm))
+                self.update_label(self.object_width_label, "Width :" + str(h_mm))
 
-            queuemove(
-                self.eloop,
-                self.robot,
-                lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
-            )
+                # Check if red dot is centered (within tolerance)
+                center_x, center_y = 300, 200  # Assuming 600x400 frame center
+                tolerance = 20
+                if abs(x_pixel - center_x) < tolerance and abs(y_pixel - center_y) < tolerance:
+                    break
 
-            dest_bin = self.eloop.run(lambda: classify_object(model_c, cap, self.class_label))
-            self.eloop.run(lambda: process_object(self.rp_socket, self.eloop, self.robot, self.free_lock, dest_bin, 0))
+                queuemove(
+                    self.eloop,
+                    self.robot,
+                    lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
+                )
+                
+                _, frame = cap.read()
+                processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
+                    process_frame(frame, model_d)
+                )
+
+            # Classify object and dispose of it
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), 0))
 
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
