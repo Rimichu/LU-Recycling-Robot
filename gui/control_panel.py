@@ -190,43 +190,29 @@ class ControlPanel(tk.Tk):
         print("Lock status:", self.lock)
         print("is_detected:", is_detected)
         # Begin critical section
-        if is_detected and self.obtain_lock():
-            self.eloop.run(lambda: print("start while loop"))
-            while True:
-                self.eloop.run(lambda: print("Classifying Object"))
-                self.update_label(self.object_x_label, "X : " + str(x_pixel))
-                self.update_label(self.object_y_label, "Y : " + str(y_pixel))
-                self.update_label(self.object_height_label, "Height : " + str(h_pixel))
-                self.update_label(self.object_width_label, "Width : " + str(w_pixel))
+        if is_detected and not self.lock:
 
-                self.eloop.run(lambda: print("Converting to mm"))
-                x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+            print("In critical section...")
 
-                self.eloop.run(lambda: print("Updating object labels"))
-                self.update_label(self.object_x_label, "X :" + str(y_mm))
-                self.update_label(self.object_y_label, "Y :" + str(x_mm))
-                self.update_label(self.object_height_label, "Height :" + str(w_mm))
-                self.update_label(self.object_width_label, "Width :" + str(h_mm))
+            self.lock = True
 
-                self.eloop.run(lambda: print("Checking if in centre"))
-                # Check if red dot is centered (within tolerance)
-                center_x, center_y = 300, 200  # Assuming 600x400 frame center
-                tolerance = 20
-                if abs(x_pixel - center_x) < tolerance and abs(y_pixel - center_y) < tolerance:
-                    break
+            self.update_label(self.object_x_label, "X : " + str(x_pixel))
+            self.update_label(self.object_y_label, "Y : " + str(y_pixel))
+            self.update_label(self.object_height_label, "Height : " + str(h_pixel))
+            self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
-                self.eloop.run(lambda: print("Moving to centre"))
-                queuemove(
-                    self.eloop,
-                    self.robot,
-                    lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
-                )
-                
-                self.eloop.run(lambda: print("Capturing new frame"))
-                _, frame = cap.read()
-                processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
-                    process_frame(frame, model_d)
-                )
+            x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+
+            self.update_label(self.object_x_label, "X :" + str(y_mm))
+            self.update_label(self.object_y_label, "Y :" + str(x_mm))
+            self.update_label(self.object_height_label, "Height :" + str(w_mm))
+            self.update_label(self.object_width_label, "Width :" + str(h_mm))
+
+            queuemove(
+                self.eloop,
+                self.robot,
+                lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
+            )
 
             # Classify object and dispose of it
             self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), 0))
