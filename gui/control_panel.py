@@ -178,17 +178,12 @@ class ControlPanel(tk.Tk):
         """
         _, frame = cap.read()
 
-        print("Processing frame for detection")
         processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
             process_frame(frame, model_d)
         )
 
-        print("Updating object detected label")
         self.update_label(self.object_detected_label, "Object Detected : " + str(is_detected))
 
-        print("Check if detected and lock free")
-        print("Lock status:", self.lock)
-        print("is_detected:", is_detected)
         # Begin critical section
         if is_detected and not self.lock:
 
