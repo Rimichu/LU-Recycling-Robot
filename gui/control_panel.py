@@ -198,16 +198,18 @@ class ControlPanel(tk.Tk):
             # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
             # Repeat until object is centered on screen
+
+            # TODO: Currently reading 1 image only; not in correct position but thinking that it is
+            print("Centering object...")
             while not is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel):
+                print("Object not centered, adjusting position...")
                 _, frame = cap.read()
                 processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
                     process_frame(frame, model_d)
                 )
 
-                x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
-
-                # x and y are inverted?
-                x_mm, y_mm = y_mm, x_mm
+                # x and y are inverted due to camera orientation
+                y_mm, x_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
                 self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
                 self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
