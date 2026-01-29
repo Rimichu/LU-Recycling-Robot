@@ -36,7 +36,7 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     
     
 
-def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, grip_angle:float):
+def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, position:tuple, grip_angle:tuple=(180,0,180)):
     """
     Process the object by moving the robot to pick it up and place it in the appropriate bin
 
@@ -45,13 +45,16 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     :param robot: Kuka robot instance
     :param unlock: Function to unlock the control panel
     :param dest_bin: Destination bin index
+    :param position: Position tuple (x, y) of the object
     :param grip_angle: Grip angle for the robot
         This is currently unused but may be useful in future implementations.
     """
 
     # Move robot to pick-up object
-    eloop.run(lambda: print("Moving to Location"))
-    queuemove(eloop, robot, lambda: robot.goto(a = 180, b = 0, c = 180))
+    eloop.run(lambda: print("Moving to object position:", position))
+    queuemove(eloop, robot, lambda: robot.goto(x=position[0], y=position[1], z=CLASSIFY_HEIGHT))
+    eloop.run(lambda: print("Setting grip angle:", grip_angle))
+    queuemove(eloop, robot, lambda: robot.goto(a = grip_angle[0], b = grip_angle[1], c = grip_angle[2]))
     eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
     eloop.run(lambda: print("Moving Down"))
@@ -66,12 +69,12 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     bin_x, bin_y = BIN_DICT[dest_bin]
     eloop.run(lambda: print("Moving to bin:", bin_x, bin_y))
     queuemove(eloop, robot, lambda: robot.goto(bin_x, bin_y))
-    eloop.run(lambda: print("Moving Down"))
-    queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
+    # eloop.run(lambda: print("Moving Down"))
+    # queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
     eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    eloop.run(lambda: print("Moving Up"))
-    queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
+    # eloop.run(lambda: print("Moving Up"))
+    # queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
     eloop.run(lambda: print("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
     eloop.run(lambda: print("Moving Home"))
