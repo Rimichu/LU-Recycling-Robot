@@ -191,22 +191,26 @@ class ControlPanel(tk.Tk):
 
             self.lock = True
 
-            self.update_label(self.object_x_label, "X : " + str(x_pixel))
-            self.update_label(self.object_y_label, "Y : " + str(y_pixel))
-            self.update_label(self.object_height_label, "Height : " + str(h_pixel))
-            self.update_label(self.object_width_label, "Width : " + str(w_pixel))
+            # Having pixels shown first can be confusing?
+            # self.update_label(self.object_x_label, "X : " + str(x_pixel))
+            # self.update_label(self.object_y_label, "Y : " + str(y_pixel))
+            # self.update_label(self.object_height_label, "Height : " + str(h_pixel))
+            # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
             x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            self.update_label(self.object_x_label, "X :" + str(y_mm))
-            self.update_label(self.object_y_label, "Y :" + str(x_mm))
-            self.update_label(self.object_height_label, "Height :" + str(w_mm))
-            self.update_label(self.object_width_label, "Width :" + str(h_mm))
+            # x and y are inverted?
+            x_mm, y_mm = y_mm, x_mm
+
+            self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
+            self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
+            self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
+            self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
             queuemove(
                 self.eloop,
                 self.robot,
-                lambda: self.robot.goto(y=x_mm, x=1080 - y_mm, z=CLASSIFY_HEIGHT),
+                lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
             # Classify object and dispose of it
