@@ -213,6 +213,19 @@ class ControlPanel(tk.Tk):
                 lambda: self.robot.goto(x=x_mm, y=540 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
+            # This is here only to test how robot movement works
+            self.eloop.run(lambda: print("Robot moving to object position"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving +10mm in x"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving -10mm in x"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving +10mm in y"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
+            self.eloop.run(lambda: print("Robot moving -10mm in y"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
+
+
             # Classify object and dispose of it
             self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
 
