@@ -210,7 +210,7 @@ class ControlPanel(tk.Tk):
             queuemove(
                 self.eloop,
                 self.robot,
-                lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
+                lambda: self.robot.goto(x=x_mm, y=540 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
             # Classify object and dispose of it
