@@ -66,7 +66,7 @@ def process_frame(frame, model):
 
     return frame, is_detected, x_min, y_min, w_pixel, h_pixel
 
-def is_object_centred(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1920, frame_height=1080, tolerance=50):
+def is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1920, frame_height=1080, tolerance=50):
     """
     Check if the detected object is centered in the frame within a given tolerance.
 

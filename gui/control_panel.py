@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import cv2
 from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT
-from vision.detect import process_frame
+from vision.detect import process_frame, is_object_centered
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
@@ -198,7 +198,7 @@ class ControlPanel(tk.Tk):
             # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
             # Repeat until object is centered on screen
-            while not self._is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel):
+            while not is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel):
                 _, frame = cap.read()
                 processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
                     process_frame(frame, model_d)
