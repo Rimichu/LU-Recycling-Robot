@@ -9,6 +9,7 @@ from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
 import rp.pi_constants as const
+import threading
 
 
 class ControlPanel(tk.Tk):
@@ -203,8 +204,14 @@ class ControlPanel(tk.Tk):
 
             print("In critical section...")
 
-            # Dispose of object
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, model_c, model_d, cap, self.class_label, (x_mm, y_mm)))
+            # Dispose of object in background thread to prevent blocking video stream
+            threading.Thread(
+                target=lambda: dispose_of_object(
+                    self.rp_socket, self.eloop, self.robot, self.free_lock, 
+                    model_c, model_d, cap, self.class_label, (x_mm, y_mm)
+                ),
+                daemon=True
+            ).start()
 
         print("Updating video frame...")
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
