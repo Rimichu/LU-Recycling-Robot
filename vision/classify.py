@@ -115,8 +115,11 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
         processed_frame, is_detected, x, y, w, h = process_frame(frame, model_d)
         return is_detected and is_object_centered(x, y, w, h)
     
-    # Start centering process and wait for centering with 30 second timeout
-    if eloop.wait_for(lambda: centre_object(rp_socket, eloop, robot, cap, model_d) and is_centered(), timeout=30):
+    # Start centering process
+    eloop.run(lambda: centre_object(rp_socket, eloop, robot, cap, model_d))
+    
+    # Wait for centering with 30 second timeout
+    if eloop.wait_for(is_centered, timeout=30):
         print("Object centered, proceeding...")
     else:
         print("Timeout waiting for object to center")
