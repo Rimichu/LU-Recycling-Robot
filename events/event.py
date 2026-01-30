@@ -82,25 +82,6 @@ class EventLoop:
             self.after(100, self.handle_event)
             raise ValueError("Unimplemented event type: " + str(event.type))
 
-    def handle_event(self):
-        try:
-            event = self.event_queue.get_nowait()
-        except QueueEmpty:
-            # no events, wait.
-            self.after(100, self.handle_event)
-            return
-
-        if event.type == EventType.SLEEP:
-            self.after(event.data["duration"], self.handle_event)
-        elif event.type == EventType.FUNC:
-            event.data["func"]()
-            self.after(100, self.handle_event)
-        elif event.type == EventType.SLEEP_UNTIL:
-            self._sleep_until(event.data["func"])
-        else:
-            self.after(100, self.handle_event)
-            raise ValueError("Unimplemented event type: " + str(event.type))
-
     def run(self, func: Callable) -> None:
         """Queue a function to run in the event loop."""
         self.event_queue.put_nowait(Event(EventType.FUNC, {"func": func}))
