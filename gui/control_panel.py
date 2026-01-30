@@ -206,6 +206,7 @@ class ControlPanel(tk.Tk):
             # Dispose of object
             self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, model_c, model_d, cap, self.class_label, (x_mm, y_mm)))
 
+        print("Updating video frame...")
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
 
