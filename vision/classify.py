@@ -80,6 +80,7 @@ def centre_object(rp_socket, eloop: EventLoop, robot: KukaRobot, cap: VideoCaptu
     if is_detected:
         # x and y are inverted due to camera orientation
         y_mm, x_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+        print(f"Centering to X: {x_mm}mm, Y: {y_mm}mm")
         queuemove(eloop, robot, robot.goto(x=x_mm, y=y_mm, z=CLASSIFY_HEIGHT))
         
         # Queue another centering attempt if not centered
@@ -116,7 +117,7 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
         return is_detected and is_object_centered(x, y, w, h)
     
     # Start centering process
-    eloop.run(lambda: centre_object(rp_socket, eloop, robot, cap, model_d))
+    centre_object(rp_socket, eloop, robot, cap, model_d)
     
     # Wait for centering with 30 second timeout
     if eloop.wait_for(is_centered, timeout=30):
