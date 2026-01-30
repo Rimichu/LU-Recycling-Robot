@@ -85,7 +85,8 @@ def centre_object(rp_socket, eloop: EventLoop, robot: KukaRobot, x_pixel, y_pixe
     
 def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, model_c, model_d, cap:VideoCapture, class_label:tk.Label, position:tuple, grip_angle:tuple=(180,0,180)):
     """
-    Process the object by moving the robot to pick it up and place it in the appropriate bin
+    Process the object by moving the robot to pick it up and place it in the appropriate bin.
+    Note: This should be called with eloop.run() to execute in the event loop.
 
     :param rp_socket: Raspberry Pi socket for communication
     :param eloop: Event loop managing asynchronous operations
@@ -101,42 +102,59 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     """
 
     dest_bin = classify_object(model_c, cap, class_label)
-
-    while not is_object_centered(position[0], position[1], 50, 50):
-        eloop.run(lambda: centre_object(rp_socket, eloop, robot, position[0], position[1], 50, 50, cap, model_d))
+    
+    # Wait for object to be centered, checking periodically
+    def is_centered():
+        _, frame = cap.read()
+        processed_frame, is_detected, x, y, w, h = process_frame(frame, model_d)
+        return is_detected and is_object_centered(x, y, w, h)
+    
+    # Wait for centering with 30 second timeout
+    if eloop.wait_for(is_centered, timeout=30):
+        print("Object centered, proceeding...")
+    else:
+        print("Timeout waiting for object to center")
+        unlock()
+        return
 
     # Move robot to pick-up object
-    eloop.run(lambda: print("Moving to object position:", position))
-    queuemove(eloop, robot, lambda: robot.goto(x=position[0], y=position[1], z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Setting grip angle:", grip_angle))
-    queuemove(eloop, robot, lambda: robot.goto(a = grip_angle[0], b = grip_angle[1], c = grip_angle[2]))
-    eloop.run(lambda: print("Open Claw"))
+    print("Moving to object position:", position)
+    queuemove(eloop, robot, robot.goto(x=position[0], y=position[1], z=CLASSIFY_HEIGHT))
+    
+    print("Setting grip angle:", grip_angle)
+    queuemove(eloop, robot, robot.goto(a=grip_angle[0], b=grip_angle[1], c=grip_angle[2]))
+    
+    print("Open Claw")
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    eloop.run(lambda: print("Moving Down"))
-    queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("Close Claw"))
+    
+    print("Moving Down")
+    queuemove(eloop, robot, robot.goto(z=OBJECT_HEIGHT))
+    
+    print("Close Claw")
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    eloop.run(lambda: print("Going Up"))
-    queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Trash picked up"))
+    
+    print("Going Up")
+    queuemove(eloop, robot, robot.goto(z=CLASSIFY_HEIGHT))
+    
+    print("Trash picked up")
 
     # Move robot to appropriate bin and release object
     bin_x, bin_y = BIN_DICT[dest_bin]
-    eloop.run(lambda: print("Moving to bin:", bin_x, bin_y))
-    queuemove(eloop, robot, lambda: robot.goto(bin_x, bin_y))
-    # eloop.run(lambda: print("Moving Down"))
-    # queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("Open Claw"))
+    print("Moving to bin:", bin_x, bin_y)
+    queuemove(eloop, robot, robot.goto(bin_x, bin_y))
+    
+    print("Open Claw")
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    # eloop.run(lambda: print("Moving Up"))
-    # queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Close Claw"))
+    
+    print("Close Claw")
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    eloop.run(lambda: print("Moving Home"))
-    queuemove(eloop, robot, lambda: movehome(robot))
-    eloop.run(lambda: print("Arrived Home"))
+    
+    print("Moving Home")
+    queuemove(eloop, robot, movehome(robot))
+    
+    print("Arrived Home")
     unlock()
-    eloop.run(lambda: print("Ready to Detect"))
+    print("Ready to Detect")
 
 
 def process_image(img):
