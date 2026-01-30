@@ -126,43 +126,43 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
         print("Timeout waiting for object to center")
 
     # Move robot to pick-up object
-    print("Moving to object position:", position)
+    eloop.run(lambda: print("Moving to object position:", position))
     queuemove(eloop, robot, robot.goto(x=position[0], y=position[1], z=CLASSIFY_HEIGHT))
     
-    print("Setting grip angle:", grip_angle)
+    eloop.run(lambda: print("Setting grip angle:", grip_angle))
     queuemove(eloop, robot, robot.goto(a=grip_angle[0], b=grip_angle[1], c=grip_angle[2]))
     
-    print("Open Claw")
+    eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
     
-    print("Moving Down")
+    eloop.run(lambda: print("Moving Down"))
     queuemove(eloop, robot, robot.goto(z=OBJECT_HEIGHT))
     
-    print("Close Claw")
+    eloop.run(lambda: print("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
     
-    print("Going Up")
+    eloop.run(lambda: print("Going Up"))
     queuemove(eloop, robot, robot.goto(z=CLASSIFY_HEIGHT))
     
-    print("Trash picked up")
+    eloop.run(lambda: print("Trash picked up"))
 
     # Move robot to appropriate bin and release object
     bin_x, bin_y = BIN_DICT[dest_bin]
-    print("Moving to bin:", bin_x, bin_y)
+    eloop.run(lambda: print("Moving to bin:", bin_x, bin_y))
     queuemove(eloop, robot, robot.goto(bin_x, bin_y))
     
-    print("Open Claw")
+    eloop.run(lambda: print("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
     
-    print("Close Claw")
+    eloop.run(lambda: print("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
     
-    print("Moving Home")
+    eloop.run(lambda: print("Moving Home"))
     queuemove(eloop, robot, movehome(robot))
     
-    print("Arrived Home")
+    eloop.run(lambda: print("Arrived Home"))
     unlock()
-    print("Ready to Detect")
+    eloop.run(lambda: print("Ready to Detect"))
 
 
 def process_image(img):

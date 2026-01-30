@@ -213,7 +213,6 @@ class ControlPanel(tk.Tk):
                 daemon=True
             ).start()
 
-        print("Updating video frame...")
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
 
