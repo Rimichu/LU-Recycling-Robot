@@ -6,10 +6,34 @@ import torch
 from events.event import EventLoop
 from kuka.constants import BIN_DICT, CLASSIFY_HEIGHT, OBJECT_HEIGHT
 from kuka.comms import movehome, queuegrip, queuemove
+from kuka.utils import pixels2mm
+from vision.detect import process_frame
 import numpy as np
 from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
+
+def is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1920, frame_height=1080, tolerance=50):
+    """
+    Check if the detected object is centered in the frame within a given tolerance.
+
+    :param x_pixel: X coordinate of the detected object
+    :param y_pixel: Y coordinate of the detected object
+    :param w_pixel: Width of the detected object
+    :param h_pixel: Height of the detected object
+    :param frame_width: Width of the video frame
+    :param frame_height: Height of the video frame
+    :param tolerance: Tolerance in pixels for centering
+
+    :return: True if centered, False otherwise
+    """
+    obj_center_x = x_pixel + (w_pixel / 2)
+    obj_center_y = y_pixel + (h_pixel / 2)
+
+    frame_center_x = frame_width / 2
+    frame_center_y = frame_height / 2
+
+    return (abs(obj_center_x - frame_center_x) <= tolerance) and (abs(obj_center_y - frame_center_y) <= tolerance)
 
 # TODO: Change function so that it only handles classification, movement should be in a separate function
 def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
@@ -33,10 +57,33 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     class_label.config(text=f"Object Type: {get_label(dest_bin)}")
 
     return dest_bin
-    
-    
 
-def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, position:tuple, grip_angle:tuple=(180,0,180)):
+def centre_object(rp_socket, eloop: EventLoop, robot: KukaRobot, x_pixel, y_pixel, w_pixel, h_pixel, cap: VideoCapture, model_d):
+    """
+    Center the detected object in the robot's field of view.
+
+    :param rp_socket: Raspberry Pi socket for communication
+    :param eloop: Event loop managing asynchronous operations
+    :param robot: Kuka robot instance
+    :param x_pixel: X coordinate of the detected object
+    :param y_pixel: Y coordinate of the detected object
+    :param w_pixel: Width of the detected object
+    :param h_pixel: Height of the detected object
+    """
+
+    # Center object before moving to pick-up
+    print("Object not centered, adjusting position...")
+    _, frame = cap.read()
+    processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
+        process_frame(frame, model_d)
+    )
+
+    # x and y are inverted due to camera orientation
+    y_mm, x_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+
+    queuemove(eloop, robot, robot.goto(x=x_mm, y=y_mm, z=CLASSIFY_HEIGHT))
+    
+def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, model_c, model_d, cap:VideoCapture, class_label:tk.Label, position:tuple, grip_angle:tuple=(180,0,180)):
     """
     Process the object by moving the robot to pick it up and place it in the appropriate bin
 
@@ -44,11 +91,19 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     :param eloop: Event loop managing asynchronous operations
     :param robot: Kuka robot instance
     :param unlock: Function to unlock the control panel
-    :param dest_bin: Destination bin index
+    :param model_c: Classification model
+    :param model_d: Detection model
+    :param cap: Video capture object
+    :param class_label: Tkinter label to display the classified object type
     :param position: Position tuple (x, y) of the object
     :param grip_angle: Grip angle for the robot
         This is currently unused but may be useful in future implementations.
     """
+
+    dest_bin = classify_object(model_c, cap, class_label)
+
+    while not is_object_centered(position[0], position[1], 50, 50):
+        eloop.run(lambda: centre_object(rp_socket, eloop, robot, position[0], position[1], 50, 50, cap, model_d))
 
     # Move robot to pick-up object
     eloop.run(lambda: print("Moving to object position:", position))

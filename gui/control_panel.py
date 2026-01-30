@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import cv2
 from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT
-from vision.detect import process_frame, is_object_centered
+from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, queuegrip, queuemove
 from kuka.utils import pixels2mm, width2angle
@@ -184,51 +184,27 @@ class ControlPanel(tk.Tk):
 
         self.update_label(self.object_detected_label, "Object Detected : " + str(is_detected))
 
-        # Begin critical section
-        if is_detected and not self.lock:
+        y_mm, x_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            print("In critical section...")
-
-            self.lock = True
-
-            # Having pixels shown first can be confusing?
-            # self.update_label(self.object_x_label, "X : " + str(x_pixel))
-            # self.update_label(self.object_y_label, "Y : " + str(y_pixel))
-            # self.update_label(self.object_height_label, "Height : " + str(h_pixel))
-            # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
-
-            # Repeat until object is centered on screen
-
-            # TODO: Currently reading 1 image only; not in correct position but thinking that it is
-            print("Centering object...")
-            while not is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel):
-                print("Object not centered, adjusting position...")
-                _, frame = cap.read()
-                processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
-                    process_frame(frame, model_d)
-                )
-
-                # x and y are inverted due to camera orientation
-                y_mm, x_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
-
+        if not self.lock: # If in critical section, don't update labels
+            if is_detected: # Update object details if detected
                 self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
                 self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
                 self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
                 self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
+            else: # Clear object details if not detected
+                self.update_label(self.object_x_label, "X : ")
+                self.update_label(self.object_y_label, "Y : ")
+                self.update_label(self.object_height_label, "Height : ")
+                self.update_label(self.object_width_label, "Width : ")
 
-                queuemove(
-                    self.eloop,
-                    self.robot,
-                    lambda: self.robot.goto(x=x_mm, y=y_mm, z=CLASSIFY_HEIGHT),
-                )
+        # Begin critical section
+        if is_detected and self.obtain_lock():
 
-                if not is_detected:
-                    self.lock = False
-                    movehome()
-                    return
+            print("In critical section...")
 
-            # Classify object and dispose of it
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
+            # Dispose of object
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, model_c, model_d, cap, self.class_label, (x_mm, y_mm)))
 
         processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(processed_frame)
