@@ -69,18 +69,18 @@ class EventLoop:
             # If no event available, check again in 100ms
             self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
             return
+            
+        eventFunctions = {
+            EventType.SLEEP: self.after(event.data["duration"], self.handle_event),
+            EventType.FUNC: self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event),
+            EventType.SLEEP_UNTIL: self._sleep_until(event.data["func"]),
+        }
 
-        match event.type:
-            case EventType.SLEEP:       # Wait, rerun this function after duration
-                self.after(event.data["duration"], self.handle_event)
-            case EventType.FUNC:        # Execute function, rerun this function after 100ms
-                event.data["func"]()
-                self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
-            case EventType.SLEEP_UNTIL: # Wait until condition is met
-                self._sleep_until(event.data["func"])
-            case _:
-                self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
-                raise ValueError("Unimplemented event type: " + str(event.type))
+        def wrong_event_type():
+            self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
+            raise ValueError("Unimplemented event type: " + str(event.type))
+
+        eventFunctions.get(event.type, wrong_event_type)()
 
     def run(self, func: Callable):
         """
@@ -154,7 +154,7 @@ class EventLoop:
         """
 
         result = func()
-        
+
         if result:
             self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
         else:
