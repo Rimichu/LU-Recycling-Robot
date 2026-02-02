@@ -197,33 +197,34 @@ class ControlPanel(tk.Tk):
             # self.update_label(self.object_height_label, "Height : " + str(h_pixel))
             # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
-            # Repeat until object is centered on screen
-            while not self._is_object_centered(x_pixel, y_pixel, w_pixel, h_pixel):
-                _, frame = cap.read()
-                processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
-                    process_frame(frame, model_d)
-                )
+            x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-                x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
+            # x and y are inverted?
+            x_mm, y_mm = y_mm, x_mm
 
-                # x and y are inverted?
-                x_mm, y_mm = y_mm, x_mm
+            self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
+            self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
+            self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
+            self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
-                self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
-                self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
-                self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
-                self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
+            queuemove(
+                self.eloop,
+                self.robot,
+                lambda: self.robot.goto(x=x_mm, y=540 - y_mm, z=CLASSIFY_HEIGHT),
+            )
 
-                queuemove(
-                    self.eloop,
-                    self.robot,
-                    lambda: self.robot.goto(x=x_mm, y=y_mm, z=CLASSIFY_HEIGHT),
-                )
+            # This is here only to test how robot movement works
+            self.eloop.run(lambda: print("Robot moving to object position"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving +10mm in x"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving -10mm in x"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
+            self.eloop.run(lambda: print("Robot moving +10mm in y"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
+            self.eloop.run(lambda: print("Robot moving -10mm in y"))
+            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
 
-                if not is_detected:
-                    self.lock = False
-                    movehome()
-                    return
 
             # Classify object and dispose of it
             self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
