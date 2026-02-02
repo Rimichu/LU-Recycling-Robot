@@ -28,7 +28,10 @@ def process_frame(frame, model):
     frame_width = frame.shape[1]
     frame_mid_x = frame_width // 2  # Screen midpoint (x-axis)
 
-    x_pixel, y_pixel, h_pixel, w_pixel = 0, 0, 0, 0
+    x_pixel = 0
+    y_pixel = 0
+    h_pixel = 0
+    w_pixel = 0
 
     df["area"] = (df["xmax"] - df["xmin"]) * (df["ymax"] - df["ymin"])
 
