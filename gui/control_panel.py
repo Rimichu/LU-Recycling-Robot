@@ -15,7 +15,7 @@ class ControlPanel(tk.Tk):
     """
     GUI Control Panel for the Waste Sorting Robot.
     """
-    eloop: EventLoop
+    # eloop: EventLoop - Outside eloop would prevent us to have multiple instances of this program?
 
     def __init__(self, robot: KukaRobot, rp_socket, title="Waste Sorter"):
         """
@@ -28,26 +28,31 @@ class ControlPanel(tk.Tk):
         """
         super().__init__()
 
-        self.title("Waste Sorter")      # set title of main window
-        self.geometry("1200x800")       # set size of main window
+        # Set up main window
+        self.title(title)
+        self.geometry("1200x800")
         self.configure(bg="#2596be")
   
         self.create_video_frame()
         self.create_labels()
 
-        self.lock = True                # Init Lock as true to prevent processing before ready
-
+        # Store robot and socket references
         self.robot = robot
+        self.rp_socket = rp_socket
         self.eloop = EventLoop(self.after)
 
-        self.rp_socket = rp_socket
+        # Initialize lock for object processing and start event loop
+        self.lock = True
 
         # Get robot to starting position
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
         queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
         
-        self.eloop.run(self.free_lock)  # Free lock as initial setup done
+        # Init lock to allow object processing
+        self.eloop.run(self.free_lock)
+
         self.eloop.start()
+
 
     def create_video_frame(self):
         """
@@ -178,7 +183,7 @@ class ControlPanel(tk.Tk):
         """
         _, frame = cap.read()
 
-        processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
+        is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
             process_frame(frame, model_d)
         )
 
@@ -210,27 +215,27 @@ class ControlPanel(tk.Tk):
             queuemove(
                 self.eloop,
                 self.robot,
-                lambda: self.robot.goto(x=x_mm, y=540 - y_mm, z=CLASSIFY_HEIGHT),
+                lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
             )
 
             # This is here only to test how robot movement works
-            self.eloop.run(lambda: print("Robot moving to object position"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving +10mm in x"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving -10mm in x"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving +10mm in y"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
-            self.eloop.run(lambda: print("Robot moving -10mm in y"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
+            # self.eloop.run(lambda: print("Robot moving to object position"))
+            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
+            # self.eloop.run(lambda: print("Robot moving +10mm in x"))
+            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
+            # self.eloop.run(lambda: print("Robot moving -10mm in x"))
+            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
+            # self.eloop.run(lambda: print("Robot moving +10mm in y"))
+            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
+            # self.eloop.run(lambda: print("Robot moving -10mm in y"))
+            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
 
 
             # Classify object and dispose of it
             self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
 
-        processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(processed_frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(frame)
 
         img_pil_resized = img_pil.resize((600, 400), Image.LANCZOS)
 

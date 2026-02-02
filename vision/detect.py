@@ -7,6 +7,13 @@ def process_frame(frame, model):
     
     :param frame: Input video frame in BGR format
     :param model: Object detection model
+
+    :return: Tuple containing:
+             - is_detected (bool): Whether an object is detected near the center
+             - x_pixel (int): X coordinate of detected object
+             - y_pixel (int): Y coordinate of detected object
+             - w_pixel (int): Width of detected object
+             - h_pixel (int): Height of detected object
     """
     img = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
@@ -22,7 +29,7 @@ def process_frame(frame, model):
     is_detected = False
 
     if df.empty:
-        return frame, is_detected, 0, 0, 0, 0
+        return is_detected, 0, 0, 0, 0
 
     # Get the width of the frame
     frame_width = frame.shape[1]
@@ -40,7 +47,7 @@ def process_frame(frame, model):
     confidence = largest["confidence"]
 
     if confidence < 0.1:
-        return frame, is_detected, 0, 0, 0, 0
+        return is_detected, 0, 0, 0, 0
 
     # Coordinates
     x_min = int(largest["xmin"])
@@ -60,8 +67,11 @@ def process_frame(frame, model):
     # Draw a red dot at the center of the rectangle
     cv2.circle(frame, (x_mid, y_mid), 5, (0, 0, 255), -1)
 
-    # If the rectangle's center is close to the middle of the frame, set "True".
-    if abs(x_pixel - frame_mid_x) < 10000:  # 50 pixel proximity tolerance
-        is_detected = True
+    # Determine if the detected object is near the center of the frame
+    # if abs(x_mid - frame_mid_x) < 10000:
+    #     is_detected = True
 
-    return frame, is_detected, x_min, y_min, w_pixel, h_pixel
+    # For now, always set to true
+    is_detected = True
+
+    return is_detected, x_min, y_min, w_pixel, h_pixel

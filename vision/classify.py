@@ -11,7 +11,6 @@ from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
 
-# TODO: Change function so that it only handles classification, movement should be in a separate function
 def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     """
     Classify the object in the frame and move the robot accordingly.
@@ -33,8 +32,6 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     class_label.config(text=f"Object Type: {get_label(dest_bin)}")
 
     return dest_bin
-    
-    
 
 def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Callable, dest_bin, position:tuple, grip_angle:tuple=(180,0,180)):
     """
