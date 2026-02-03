@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
-from pi.constants import PI_SERVER_ADDRESS, PI_SERVER_PORT  
+from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT  
 import cv2
 import torch
 import socket
