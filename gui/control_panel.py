@@ -5,7 +5,7 @@ from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT, CAM_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
-from kuka.comms import movehome, queuegrip, queuemove
+from kuka.comms import movehome, queuegrip, queuemove, moveOff
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
 import rp.pi_constants as const
@@ -123,7 +123,21 @@ class ControlPanel(tk.Tk):
 
     # TODO: Implement safe quit button functionality
     def quit(self):
-        pass
+        """
+        Safely quit the application.
+        
+        :param self: Self instance
+        """
+        while (not self.obtain_lock()):
+            self.after(100, self.quit)  # Wait until lock is obtained, ensure no new objects are being processed
+        
+        # Go to off position
+        queuemove(self.eloop, self.robot, lambda: moveOff(self.robot))
+        self.eloop.sleep_until(lambda: not self.eloop.has_pending_tasks())
+        self.eloop.run(lambda: self.eloop.stop())
+
+        self.destroy()
+
         
     def free_lock(self):
         """

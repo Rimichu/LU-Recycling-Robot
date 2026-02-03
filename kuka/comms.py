@@ -1,6 +1,6 @@
 from typing import Callable
 from events.event import EventLoop
-from kuka.constants import HOME_POS, TOOL_ANGLE
+from kuka.constants import HOME_POS, TOOL_ANGLE, OFF_POS
 from kuka_comm_lib import KukaRobot
 import socket
 import rp.pi_constants as const
@@ -50,6 +50,14 @@ def movehome(r: KukaRobot):
     :param r: Kuka robot instance
     """
     r.goto(*HOME_POS, *TOOL_ANGLE) # Move to home position
+
+def moveOff(r: KukaRobot):
+    """
+    Move the Kuka robot to its off position.
+    
+    :param r: Kuka robot instance
+    """
+    r.goto(*OFF_POS, *TOOL_ANGLE) # Move to off position
 
 # TODO: Add error handling for lost connections
 def pi_reconnect(rp_socket):
