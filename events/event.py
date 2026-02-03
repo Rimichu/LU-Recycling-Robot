@@ -56,6 +56,28 @@ class EventLoop:
 
         self.handle_event()
 
+    def stop(self):
+        """
+        Stop the event loop.
+        
+        :param self: Self instance
+        """
+
+        # Clear the event queue
+        with self.event_queue.mutex:
+            self.event_queue.queue.clear()
+
+    def has_pending_tasks(self) -> bool:
+        """
+        Check if there are pending tasks in the event queue.
+        
+        :param self: Self instance
+
+        :return: True if there are pending tasks, False otherwise
+        """
+
+        return not self.event_queue.empty()
+
     def handle_event(self):
         """
         Handle the next event in the queue.

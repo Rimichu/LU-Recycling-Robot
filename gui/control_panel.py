@@ -43,6 +43,7 @@ class ControlPanel(tk.Tk):
 
         # Initialize lock for object processing and start event loop
         self.lock = True
+        self.quitting = False
 
         # Get robot to starting position
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
@@ -128,6 +129,8 @@ class ControlPanel(tk.Tk):
         
         :param self: Self instance
         """
+        self.quitting = True
+
         if (not self.obtain_lock()):
             self.after(100, self.quit)  # Wait until lock is obtained, ensure no new objects are being processed
             return
@@ -243,6 +246,5 @@ class ControlPanel(tk.Tk):
         current_pos = self.robot.get_current_position()
         self.update_pos_labels(current_pos)
 
-        self.label_img.after(
-            20, self.video_stream, cap, model_d, model_c
-        )
+        if not self.quitting:
+            self.label_img.after(20, self.video_stream, cap, model_d, model_c)
