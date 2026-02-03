@@ -213,7 +213,7 @@ class ControlPanel(tk.Tk):
             self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
             # Classify object and dispose of it
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm - CAM_POS[0], y_mm - CAM_POS[1])))
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm + CAM_POS[0], y_mm + CAM_POS[1])))
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame)
