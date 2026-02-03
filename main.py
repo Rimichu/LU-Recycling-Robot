@@ -76,7 +76,7 @@ def initialize_resources():
         cap = cv2.VideoCapture(0)
         
         yield rp_socket, robot, model_d, model_c, cap
-    except 
+        
     except KeyboardInterrupt:
         raise
     except Exception as e:
