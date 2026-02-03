@@ -15,47 +15,22 @@ def calculate_base(angle_degrees, height):
     return base
 
 def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel):
-    """
-    Convert pixel coordinates and dimensions to millimeters.
-
-    :param x_pixel: X coordinate in pixels
-    :param y_pixel: Y coordinate in pixels
-    :param w_pixel: Width in pixels
-    :param h_pixel: Height in pixels
-
-    :return: Tuple of (x_mm, y_mm, w_mm, h_mm)
-    """
-    # camera resolution 1080/1920
-    # camera verticle angle 48, horizontal 28.5
-    w_mm = calculate_base(CAM_X_ANG, DETECT_HEIGHT)
-    h_mm = calculate_base(CAM_Y_ANG, DETECT_HEIGHT)
+    w_mm_total = calculate_base(CAM_X_ANG, DETECT_HEIGHT) * 2
+    h_mm_total = calculate_base(CAM_Y_ANG, DETECT_HEIGHT) * 2
 
     x_obj_mid = x_pixel + (w_pixel/2)
     y_obj_mid = y_pixel + (h_pixel/2)
 
-    x_mm = x_obj_mid
-    y_mm = y_obj_mid
-    w_mm = w_pixel
-    h_mm = h_pixel
+    # Convert ratios to mm relative to home position
+    x_ratio = (x_obj_mid / 1080) - 0.5
+    y_ratio = (y_obj_mid / 1920) - 0.5
+
+    x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
+    y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
     
-    # x_ratio = (x_obj_mid/1080)
-    # y_ratio = (y_obj_mid/1920)
-
-    # if x_ratio != 0.5:
-    #     x_ratio -= 0.5
-    # else:
-    #     x_ratio = 0
-
-    # if y_ratio != 0.5:
-    #     y_ratio -= 0.5
-    # else:
-    #     y_ratio = 0
-
-    # x_delta = w_mm*x_ratio
-    # y_delta = h_mm*y_ratio
-
-    # x_mm = HOME_POS[0] + x_delta
-    # y_mm = HOME_POS[1] + y_delta
+    # Convert dimensions
+    w_mm = w_pixel * (w_mm_total / 1080)
+    h_mm = h_pixel * (h_mm_total / 1920)
 
     return x_mm, y_mm, w_mm, h_mm
 
