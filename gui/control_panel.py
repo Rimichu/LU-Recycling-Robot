@@ -138,9 +138,7 @@ class ControlPanel(tk.Tk):
         # Go to off position
         queuemove(self.eloop, self.robot, lambda: moveOff(self.robot))
         self.eloop.sleep_until(lambda: not self.eloop.has_pending_tasks())
-        self.eloop.run(lambda: self.eloop.stop())
-
-        self.destroy()
+        self.eloop.run(lambda: self.destroy())
 
         
     def free_lock(self):

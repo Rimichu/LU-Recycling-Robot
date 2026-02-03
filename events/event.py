@@ -56,6 +56,7 @@ class EventLoop:
 
         self.handle_event()
 
+    # Not used currently
     def stop(self):
         """
         Stop the event loop.
