@@ -128,8 +128,9 @@ class ControlPanel(tk.Tk):
         
         :param self: Self instance
         """
-        while (not self.obtain_lock()):
+        if (not self.obtain_lock()):
             self.after(100, self.quit)  # Wait until lock is obtained, ensure no new objects are being processed
+            return
         
         # Go to off position
         queuemove(self.eloop, self.robot, lambda: moveOff(self.robot))
