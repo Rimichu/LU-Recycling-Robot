@@ -43,7 +43,6 @@ def queuegrip(e: EventLoop, command, rp_socket):
     e.run(lambda: signal_grip(command, rp_socket))
     e.sleep(5000)
 
-
 def movehome(r: KukaRobot):
     """
     Move the Kuka robot to its home position.
@@ -51,3 +50,21 @@ def movehome(r: KukaRobot):
     :param r: Kuka robot instance
     """
     r.goto(*HOME_POS, *TOOL_ANGLE) # Move to home position
+
+# TODO: Add error handling for lost connections
+def pi_reconnect(rp_socket):
+    """
+    Attempt to reconnect to the Raspberry Pi server.
+    
+    :param rp_socket: Raspberry Pi socket for communication
+    """
+    try:
+        rp_socket.close()
+    except Exception:
+        pass  # Ignore errors on close
+
+    new_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    new_socket.settimeout(10)
+    new_socket.connect((const.PI_SERVER_ADDRESS, const.PI_SERVER_PORT))
+    print(f"Reconnected to the raspberrypi server over WiFi at {const.PI_SERVER_ADDRESS}:{const.PI_SERVER_PORT}")
+    return new_socket

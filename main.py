@@ -1,13 +1,10 @@
 from contextlib import contextmanager
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
+from pi.constants import PI_SERVER_ADDRESS, PI_SERVER_PORT  
 import cv2
 import torch
 import socket
-
-# Raspberry Pi constants
-PI_SERVER_ADDRESS = "10.42.0.218"
-PI_SERVER_PORT = 5050
 
 # Kuka Robot constants
 LEFT_KUKA_IP_ADDRESS = "192.168.1.195"
