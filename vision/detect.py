@@ -68,10 +68,8 @@ def process_frame(frame, model):
     cv2.circle(frame, (x_mid, y_mid), 5, (0, 0, 255), -1)
 
     # Determine if the detected object is near the center of the frame
-    # if abs(x_mid - frame_mid_x) < 10000:
-    #     is_detected = True
-
-    # For now, always set to true
-    is_detected = True
+    # Threshold ensures accuracy of robot moveing to location
+    if abs(x_mid - frame_mid_x) < 500: # 500 is a large threshold, used for testing, and can be adjusted later
+        is_detected = True
 
     return is_detected, x_min, y_min, w_pixel, h_pixel

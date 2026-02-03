@@ -212,11 +212,12 @@ class ControlPanel(tk.Tk):
             self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
             self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
-            queuemove(
-                self.eloop,
-                self.robot,
-                lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
-            )
+            # Obselete code?
+            # queuemove(
+            #     self.eloop,
+            #     self.robot,
+            #     lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
+            # )
 
             # This is here only to test how robot movement works
             # self.eloop.run(lambda: print("Robot moving to object position"))
