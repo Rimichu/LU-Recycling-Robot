@@ -70,17 +70,16 @@ class EventLoop:
             self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
             return
             
-        eventFunctions = {
-            EventType.SLEEP: self.after(event.data["duration"], self.handle_event),
-            EventType.FUNC: self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event),
-            EventType.SLEEP_UNTIL: self._sleep_until(event.data["func"]),
-        }
-
-        def wrong_event_type():
+        if event.type == EventType.SLEEP:
+            self.after(event.data["duration"], self.handle_event)
+        elif event.type == EventType.FUNC:
+            event.data["func"]()
+            self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
+        elif event.type == EventType.SLEEP_UNTIL:
+            self._sleep_until(event.data["func"])
+        else:
             self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
             raise ValueError("Unimplemented event type: " + str(event.type))
-
-        eventFunctions.get(event.type, wrong_event_type)()
 
     def run(self, func: Callable):
         """
