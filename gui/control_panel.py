@@ -2,7 +2,7 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
 from events.event import EventLoop
-from kuka.constants import CLASSIFY_HEIGHT
+from kuka.constants import CLASSIFY_HEIGHT, CAM_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, queuegrip, queuemove
@@ -212,28 +212,8 @@ class ControlPanel(tk.Tk):
             self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
             self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
-            # Obselete code?
-            # queuemove(
-            #     self.eloop,
-            #     self.robot,
-            #     lambda: self.robot.goto(x=x_mm, y=1080 - y_mm, z=CLASSIFY_HEIGHT),
-            # )
-
-            # This is here only to test how robot movement works
-            # self.eloop.run(lambda: print("Robot moving to object position"))
-            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
-            # self.eloop.run(lambda: print("Robot moving +10mm in x"))
-            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
-            # self.eloop.run(lambda: print("Robot moving -10mm in x"))
-            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
-            # self.eloop.run(lambda: print("Robot moving +10mm in y"))
-            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
-            # self.eloop.run(lambda: print("Robot moving -10mm in y"))
-            # queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
-
-
             # Classify object and dispose of it
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm - CAM_POS[0], y_mm - CAM_POS[1])))
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame)
