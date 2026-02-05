@@ -19,7 +19,7 @@ def open_claw(h, anticlockwise_pin, clockwise_pin):
     lgpio.gpio_write(h, clockwise_pin, const.HIGH)
     lgpio.gpio_write(h, anticlockwise_pin, const.LOW)
 
-    time.sleep(4)  # Duration to open claw
+    time.sleep(2)  # Duration to open claw
 
     lgpio.gpio_write(h, clockwise_pin, const.LOW)
 
@@ -37,6 +37,6 @@ def close_claw(h, clockwise_pin, anticlockwise_pin):
     lgpio.gpio_write(h, anticlockwise_pin, const.HIGH)
     lgpio.gpio_write(h, clockwise_pin, const.LOW)
 
-    time.sleep(4)  # Duration to close claw
+    time.sleep(2)  # Duration to close claw
 
     lgpio.gpio_write(h, anticlockwise_pin, const.LOW)

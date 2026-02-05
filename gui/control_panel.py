@@ -2,10 +2,10 @@ import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
 from events.event import EventLoop
-from kuka.constants import CLASSIFY_HEIGHT
+from kuka.constants import CLASSIFY_HEIGHT, CAM_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
-from kuka.comms import movehome, queuegrip, queuemove
+from kuka.comms import movehome, queuegrip, queuemove, moveOff
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
 import rp.pi_constants as const
@@ -15,7 +15,7 @@ class ControlPanel(tk.Tk):
     """
     GUI Control Panel for the Waste Sorting Robot.
     """
-    eloop: EventLoop
+    # eloop: EventLoop - Outside eloop would prevent us to have multiple instances of this program?
 
     def __init__(self, robot: KukaRobot, rp_socket, title="Waste Sorter"):
         """
@@ -28,26 +28,32 @@ class ControlPanel(tk.Tk):
         """
         super().__init__()
 
-        self.title("Waste Sorter")      # set title of main window
-        self.geometry("1200x800")       # set size of main window
+        # Set up main window
+        self.title(title)
+        self.geometry("1200x800")
         self.configure(bg="#2596be")
   
         self.create_video_frame()
         self.create_labels()
 
-        self.lock = True                # Init Lock as true to prevent processing before ready
-
+        # Store robot and socket references
         self.robot = robot
+        self.rp_socket = rp_socket
         self.eloop = EventLoop(self.after)
 
-        self.rp_socket = rp_socket
+        # Initialize lock for object processing and start event loop
+        self.lock = True
+        self.quitting = False
 
         # Get robot to starting position
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
         queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
         
-        self.eloop.run(self.free_lock)  # Free lock as initial setup done
+        # Init lock to allow object processing
+        self.eloop.run(self.free_lock)
+
         self.eloop.start()
+
 
     def create_video_frame(self):
         """
@@ -118,7 +124,21 @@ class ControlPanel(tk.Tk):
 
     # TODO: Implement safe quit button functionality
     def quit(self):
-        pass
+        """
+        Safely quit the application.
+        
+        :param self: Self instance
+        """
+        self.quitting = True
+
+        if (not self.obtain_lock()):
+            self.after(100, self.quit)  # Wait until lock is obtained, ensure no new objects are being processed
+            return
+        
+        # Go to off position
+        queuemove(self.eloop, self.robot, lambda: moveOff(self.robot))
+        self.eloop.run(lambda: self.destroy())
+
         
     def free_lock(self):
         """
@@ -176,16 +196,20 @@ class ControlPanel(tk.Tk):
         :param model_d: Object detection model
         :param model_c: Object classification model
         """
-        _, frame = cap.read()
+        # Capture frame from camera, if error occurs, try again after 20ms
+        ret, frame = cap.read()
+        if not ret:
+            self.label_img.after(20, self.video_stream, cap, model_d, model_c)
+            return
 
-        processed_frame, is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
+        is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
             process_frame(frame, model_d)
         )
 
         self.update_label(self.object_detected_label, "Object Detected : " + str(is_detected))
 
         # Begin critical section
-        if is_detected and not self.lock:
+        if is_detected and not self.lock and not self.quitting:
 
             print("In critical section...")
 
@@ -207,30 +231,11 @@ class ControlPanel(tk.Tk):
             self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
             self.update_label(self.object_width_label, "Width :" + str(h_mm) + "mm")
 
-            queuemove(
-                self.eloop,
-                self.robot,
-                lambda: self.robot.goto(x=x_mm, y=540 - y_mm, z=CLASSIFY_HEIGHT),
-            )
-
-            # This is here only to test how robot movement works
-            self.eloop.run(lambda: print("Robot moving to object position"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving +10mm in x"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm+10, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving -10mm in x"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm-10, y=y_mm))
-            self.eloop.run(lambda: print("Robot moving +10mm in y"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm+10))
-            self.eloop.run(lambda: print("Robot moving -10mm in y"))
-            queuemove(self.eloop, self.robot, lambda: self.robot.goto(x=x_mm, y=y_mm-10))
-
-
             # Classify object and dispose of it
-            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm, y_mm)))
+            self.eloop.run(lambda: dispose_of_object(self.rp_socket, self.eloop, self.robot, self.free_lock, classify_object(model_c, cap, self.class_label), (x_mm + CAM_POS[0], y_mm + CAM_POS[1])))
 
-        processed_frame = cv2.cvtColor(processed_frame, cv2.COLOR_BGR2RGB)
-        img_pil = Image.fromarray(processed_frame)
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        img_pil = Image.fromarray(frame)
 
         img_pil_resized = img_pil.resize((600, 400), Image.LANCZOS)
 
@@ -242,6 +247,5 @@ class ControlPanel(tk.Tk):
         current_pos = self.robot.get_current_position()
         self.update_pos_labels(current_pos)
 
-        self.label_img.after(
-            20, self.video_stream, cap, model_d, model_c
-        )
+        if not self.quitting:
+            self.label_img.after(20, self.video_stream, cap, model_d, model_c)

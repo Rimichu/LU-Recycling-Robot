@@ -1,7 +1,16 @@
 CAM_X_ANG = 28.5
 CAM_Y_ANG = 48
+CAM_POS = [150, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos) 
 
-BIN_DICT = {0: [477.13, -404], 1: [477.13, -404], 2: [477.13, -404], 3: [477.13, -404], 4: [477.13, -404], 5: [477.13, -404]}
+# All bin positions (x,y) are the same for now, to be updated later
+BIN_DICT = {
+    0: [477.13, -404],
+    1: [477.13, -404],
+    2: [477.13, -404],
+    3: [477.13, -404],
+    4: [477.13, -404],
+    5: [477.13, -404]
+}
 
 DETECT_HEIGHT = 600
 CLASSIFY_HEIGHT = 330
@@ -16,3 +25,5 @@ OBJECT_HEIGHT = 0
 # TOOL_ANGLE = [177.74, -0.46, 172.27]
 HOME_POS = [500, 800, DETECT_HEIGHT]
 TOOL_ANGLE = [180, 0, 180]
+
+OFF_POS = [950, 800, OBJECT_HEIGHT]
