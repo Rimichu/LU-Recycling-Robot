@@ -197,7 +197,8 @@ class ControlPanel(tk.Tk):
         :param model_c: Object classification model
         """
         # Capture frame from camera, if error occurs, try again after 20ms
-        if not cap.read(frame):
+        ret, frame = cap.read()
+        if not ret:
             self.label_img.after(20, self.video_stream, cap, model_d, model_c)
             return
 
