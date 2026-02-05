@@ -196,7 +196,10 @@ class ControlPanel(tk.Tk):
         :param model_d: Object detection model
         :param model_c: Object classification model
         """
-        _, frame = cap.read()
+        # Capture frame from camera, if error occurs, try again after 20ms
+        if not cap.read(frame):
+            self.label_img.after(20, self.video_stream, cap, model_d, model_c)
+            return
 
         is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
             process_frame(frame, model_d)
