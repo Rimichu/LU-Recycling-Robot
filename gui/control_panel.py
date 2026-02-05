@@ -205,7 +205,7 @@ class ControlPanel(tk.Tk):
         self.update_label(self.object_detected_label, "Object Detected : " + str(is_detected))
 
         # Begin critical section
-        if is_detected and not self.lock:
+        if is_detected and not self.lock and not self.quitting:
 
             print("In critical section...")
 

@@ -80,8 +80,15 @@ def initialize_resources():
     except KeyboardInterrupt:
         raise
     except Exception as e:
-        print(f"Initialization failed: {e}")
-        raise # Re-raise exception after logging to exit try in main
+        print(f"Initialisation failed: {e}")
+
+        # This will only catch the first failed resource (if the first fails, the others will not have had the chance to get intialised)
+        if not rp_socket:
+            raise Exception("Raspberry Pi connection failed") from e
+        if not robot:
+            raise Exception("Kuka robot connection failed") from e
+        if not cap:
+            raise Exception("Camera initialization failed") from e
     finally:
         if rp_socket:
             disconnect_from_pi(rp_socket)
@@ -94,7 +101,7 @@ def initialize_resources():
 if __name__ == "__main__":
     try:
         with initialize_resources() as (rp_socket, robot, model_d, model_c, cap):
-            controlPanel = ControlPanel(robot, rp_socket, "Waste Sorter")
+            controlPanel = ControlPanel(robot, rp_socket, "Recycling Robot Control Panel")
             controlPanel.video_stream(cap, model_d, model_c)
             controlPanel.mainloop()
     except KeyboardInterrupt:
