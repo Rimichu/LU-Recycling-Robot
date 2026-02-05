@@ -1,12 +1,10 @@
 from typing import Callable
 from cv2 import VideoCapture
-import cv2
 from kuka_comm_lib import KukaRobot
 import torch
 from events.event import EventLoop
 from kuka.constants import BIN_DICT, CLASSIFY_HEIGHT, OBJECT_HEIGHT
 from kuka.comms import movehome, queuegrip, queuemove
-import numpy as np
 from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
@@ -93,7 +91,7 @@ def process_image(img):
         transforms.ToTensor()
     ])
 
-    device = torch.device("cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     return transform(img).unsqueeze(0).to(device)
 
