@@ -41,7 +41,7 @@ def queuegrip(e: EventLoop, command, rp_socket):
     :param rp_socket: Raspberry Pi socket for communication
     """
     e.run(lambda: signal_grip(command, rp_socket))
-    e.sleep(5000)
+    e.sleep(2000)
 
 def movehome(r: KukaRobot):
     """
