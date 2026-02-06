@@ -46,7 +46,9 @@ def process_frame(frame, model):
 
     confidence = largest["confidence"]
 
-    if confidence < 0.1:
+    MIN_CONFIDENCE = 0.5
+
+    if confidence < MIN_CONFIDENCE:
         return is_detected, 0, 0, 0, 0
 
     # Coordinates
@@ -69,7 +71,13 @@ def process_frame(frame, model):
 
     # Determine if the detected object is near the center of the frame
     # Threshold ensures accuracy of robot moveing to location
-    if abs(x_mid - frame_mid_x) < 500: # 500 is a large threshold, used for testing, and can be adjusted later
+
+    # Adjust these thresholds as needed
+    DETECTION_X_THRESHOLD = 100
+    DETECTION_Y_THRESHOLD = 100 
+
+    frame_mid_y = frame.shape[0] // 2
+    if abs(x_mid - frame_mid_x) < DETECTION_X_THRESHOLD and abs(y_mid - frame_mid_y) < DETECTION_Y_THRESHOLD:
         is_detected = True
 
     return is_detected, x_min, y_min, w_pixel, h_pixel

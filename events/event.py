@@ -101,7 +101,7 @@ class EventLoop:
         elif event.type == EventType.SLEEP_UNTIL:
             self._sleep_until(event.data["func"])
         else:
-            self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
+            # self.after(self.DEFAULT_SLEEP_DURATION, self.handle_event)
             raise ValueError("Unimplemented event type: " + str(event.type))
 
     def run(self, func: Callable):
