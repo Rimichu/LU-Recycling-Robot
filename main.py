@@ -3,6 +3,8 @@ from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
 from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT, PI_CAMERA_PORT
 import cv2
+import subprocess
+import numpy as np
 import torch
 import socket
 import logging
@@ -77,18 +79,53 @@ def initialize_resources():
         model_c = torch.load("checkpoints/trash.pth", map_location=device, weights_only=False)
         model_c.eval()
         
-        # Connect to the Raspberry Pi H.264 camera stream via GStreamer
-        gst_pipeline = (
-            f"tcpclientsrc host={PI_SERVER_ADDRESS} port={PI_CAMERA_PORT} "
-            f"! h264parse "
-            f"! avdec_h264 "
-            f"! videoconvert "
-            f"! appsink drop=true sync=false"
-        )
-        logger.info(f"Connecting to camera stream at {PI_SERVER_ADDRESS}:{PI_CAMERA_PORT}")
-        cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
+        # Connect to the Raspberry Pi H.264 camera stream using ffmpeg subprocess
+        # This avoids requiring GStreamer support in OpenCV and keeps low latency.
+        class FFmpegCapture:
+            def __init__(self, host, port, width=640, height=480):
+                self.width = width
+                self.height = height
+                self.frame_size = width * height * 3
+                cmd = [
+                    "ffmpeg",
+                    "-hide_banner",
+                    "-loglevel", "error",
+                    "-i", f"tcp://{host}:{port}",
+                    "-f", "rawvideo",
+                    "-pix_fmt", "bgr24",
+                    "-s", f"{width}x{height}",
+                    "-",
+                ]
+                try:
+                    self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+                except FileNotFoundError:
+                    raise RuntimeError("ffmpeg not found. Install with: sudo apt install ffmpeg")
+
+            def read(self):
+                raw = self.proc.stdout.read(self.frame_size)
+                if not raw or len(raw) != self.frame_size:
+                    return False, None
+                frame = np.frombuffer(raw, dtype=np.uint8).reshape((self.height, self.width, 3))
+                return True, frame
+
+            def isOpened(self):
+                return hasattr(self, "proc") and (self.proc.poll() is None)
+
+            def release(self):
+                try:
+                    if hasattr(self, "proc"):
+                        self.proc.terminate()
+                        self.proc.wait(timeout=1)
+                except Exception:
+                    try:
+                        self.proc.kill()
+                    except Exception:
+                        pass
+
+        logger.info(f"Connecting to camera stream at {PI_SERVER_ADDRESS}:{PI_CAMERA_PORT} via ffmpeg")
+        cap = FFmpegCapture(PI_SERVER_ADDRESS, PI_CAMERA_PORT, width=640, height=480)
         if not cap.isOpened():
-            raise RuntimeError(f"Failed to connect to camera stream (ensure GStreamer is installed)")
+            raise RuntimeError("Failed to start ffmpeg capture. Ensure the Pi is streaming and ffmpeg is installed on this host.")
         
         yield rp_socket, robot, model_d, model_c, cap
         
