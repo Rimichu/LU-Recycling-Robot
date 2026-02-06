@@ -14,19 +14,23 @@ def index():
 
 def gen():
 	"""Video streaming generator function"""
-	vs = cv2.VideoCapture(0, cv2.CAP_V4L2)  # Use V4L2 backend for better performance on Linux
+	# Try different backends and settings
+	vs = cv2.VideoCapture(0)
+	vs.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffer
 	
 	# Check if camera opened successfully
 	if not vs.isOpened():
 		logger.error("Failed to open camera device /dev/video0")
 		return
 	
+	frame_count = 0
 	try:
 		while True:
 			ret, frame = vs.read()
 			if not ret:
-				logger.warning("Failed to read frame from camera")
+				logger.warning(f"Failed to read frame after {frame_count} successful frames")
 				break
+			frame_count += 1
 			ret, jpeg = cv2.imencode('.jpg', frame)
 			if not ret:
 				logger.warning("Failed to encode frame to JPEG")
