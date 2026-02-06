@@ -1,6 +1,7 @@
 # IP and port constants for Raspberry Pi server
 PI_SERVER_ADDRESS = "10.42.0.218"
 PI_SERVER_PORT = 5050
+PI_CAMERA_PORT = 5000
 
 # GPIO pin constants
 CLOCKWISE_PIN = 23

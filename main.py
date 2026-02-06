@@ -1,7 +1,7 @@
 from contextlib import contextmanager
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
-from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT  
+from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT, PI_CAMERA_PORT
 import cv2
 import torch
 import socket
@@ -77,9 +77,11 @@ def initialize_resources():
         model_c = torch.load("checkpoints/trash.pth", map_location=device, weights_only=False)
         model_c.eval()
         
-        cap = cv2.VideoCapture(0)
+        # Connect to the Raspberry Pi camera stream
+        stream_url = f"http://{PI_SERVER_ADDRESS}:{PI_CAMERA_PORT}/video_feed"
+        cap = cv2.VideoCapture(stream_url)
         if not cap.isOpened():
-            raise RuntimeError("Camera failed to open")
+            raise RuntimeError(f"Failed to connect to camera stream at {stream_url}")
         
         yield rp_socket, robot, model_d, model_c, cap
         

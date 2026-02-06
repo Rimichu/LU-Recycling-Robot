@@ -3,8 +3,51 @@ import lgpio
 import servo
 import pi_constants as const
 import logging
+import threading
+from flask import Flask, Response
+from picamera2 import Picamera2
+import cv2
 
 logger = logging.getLogger(__name__)
+
+# Flask app for camera streaming
+flask_app = Flask(__name__)
+
+# Shared Picamera2 instance
+picam2 = None
+picam2_lock = threading.Lock()
+
+def init_camera():
+    """Initialize the Picamera2 instance."""
+    global picam2
+    picam2 = Picamera2()
+    config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
+    picam2.configure(config)
+    picam2.start()
+    logger.info("Picamera2 started at 640x480")
+
+def gen_frames():
+    """Video streaming generator function."""
+    while True:
+        with picam2_lock:
+            frame = picam2.capture_array()
+        ret, jpeg = cv2.imencode('.jpg', frame)
+        if not ret:
+            logger.warning("Failed to encode frame to JPEG")
+            continue
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
+
+@flask_app.route('/video_feed')
+def video_feed():
+    """Video streaming route."""
+    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+def start_camera_server():
+    """Start the Flask camera server in a separate thread."""
+    init_camera()
+    logger.info(f"Starting camera stream on port {const.PI_CAMERA_PORT}")
+    flask_app.run(host='0.0.0.0', port=const.PI_CAMERA_PORT, debug=False, threaded=True)
 
 # TODO: See if handle_client can be made async
 # TODO: Get light to flash when r-pi on # TODO: See if led_pattern_loop can be made async
@@ -68,6 +111,10 @@ def while_loop(server_socket):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+
+    # Start camera streaming server in a background thread
+    camera_thread = threading.Thread(target=start_camera_server, daemon=True)
+    camera_thread.start()
 
     # Get handle to gpio pins
     h = lgpio.gpiochip_open(0)
