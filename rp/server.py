@@ -4,50 +4,40 @@ import servo
 import pi_constants as const
 import logging
 import threading
-from flask import Flask, Response
-from picamera2 import Picamera2
-import cv2
+import subprocess
 
 logger = logging.getLogger(__name__)
 
-# Flask app for camera streaming
-flask_app = Flask(__name__)
-
-# Shared Picamera2 instance
-picam2 = None
-picam2_lock = threading.Lock()
-
-def init_camera():
-    """Initialize the Picamera2 instance."""
-    global picam2
-    picam2 = Picamera2()
-    config = picam2.create_preview_configuration(main={"size": (640, 480), "format": "RGB888"})
-    picam2.configure(config)
-    picam2.start()
-    logger.info("Picamera2 started at 640x480")
-
-def gen_frames():
-    """Video streaming generator function."""
-    while True:
-        with picam2_lock:
-            frame = picam2.capture_array()
-        ret, jpeg = cv2.imencode('.jpg', frame)
-        if not ret:
-            logger.warning("Failed to encode frame to JPEG")
-            continue
-        yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + jpeg.tobytes() + b'\r\n')
-
-@flask_app.route('/video_feed')
-def video_feed():
-    """Video streaming route."""
-    return Response(gen_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
-
-def start_camera_server():
-    """Start the Flask camera server in a separate thread."""
-    init_camera()
-    logger.info(f"Starting camera stream on port {const.PI_CAMERA_PORT}")
-    flask_app.run(host='0.0.0.0', port=const.PI_CAMERA_PORT, debug=False, threaded=True)
+def start_camera_stream():
+    """
+    Start libcamera-vid to stream H.264 video over TCP.
+    Uses the Pi's hardware H.264 encoder for minimal CPU usage and low latency.
+    Listens for incoming TCP connections on PI_CAMERA_PORT.
+    """
+    cmd = [
+        "libcamera-vid",
+        "-t", "0",                          # Stream indefinitely
+        "--width", "640",
+        "--height", "480",
+        "--framerate", "30",
+        "--codec", "h264",
+        "--profile", "baseline",            # Baseline profile for low latency
+        "--level", "4.2",
+        "--inline",                         # Inline headers for stream joining
+        "--flush",                          # Flush output buffers immediately
+        "--listen",                         # TCP listen mode
+        "-o", f"tcp://0.0.0.0:{const.PI_CAMERA_PORT}",
+    ]
+    logger.info(f"Starting H.264 camera stream on TCP port {const.PI_CAMERA_PORT}")
+    try:
+        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Log any stderr output
+        for line in process.stderr:
+            logger.debug(f"libcamera-vid: {line.decode().strip()}")
+    except FileNotFoundError:
+        logger.error("libcamera-vid not found. Install with: sudo apt install libcamera-apps")
+    except Exception as e:
+        logger.error(f"Failed to start camera stream: {e}")
 
 # TODO: See if handle_client can be made async
 # TODO: Get light to flash when r-pi on # TODO: See if led_pattern_loop can be made async
@@ -112,8 +102,8 @@ def while_loop(server_socket):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    # Start camera streaming server in a background thread
-    camera_thread = threading.Thread(target=start_camera_server, daemon=True)
+    # Start H.264 camera stream in a background thread
+    camera_thread = threading.Thread(target=start_camera_stream, daemon=True)
     camera_thread.start()
 
     # Get handle to gpio pins

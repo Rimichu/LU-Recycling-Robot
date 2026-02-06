@@ -77,11 +77,18 @@ def initialize_resources():
         model_c = torch.load("checkpoints/trash.pth", map_location=device, weights_only=False)
         model_c.eval()
         
-        # Connect to the Raspberry Pi camera stream
-        stream_url = f"http://{PI_SERVER_ADDRESS}:{PI_CAMERA_PORT}/video_feed"
-        cap = cv2.VideoCapture(stream_url)
+        # Connect to the Raspberry Pi H.264 camera stream via GStreamer
+        gst_pipeline = (
+            f"tcpclientsrc host={PI_SERVER_ADDRESS} port={PI_CAMERA_PORT} "
+            f"! h264parse "
+            f"! avdec_h264 "
+            f"! videoconvert "
+            f"! appsink drop=true sync=false"
+        )
+        logger.info(f"Connecting to camera stream at {PI_SERVER_ADDRESS}:{PI_CAMERA_PORT}")
+        cap = cv2.VideoCapture(gst_pipeline, cv2.CAP_GSTREAMER)
         if not cap.isOpened():
-            raise RuntimeError(f"Failed to connect to camera stream at {stream_url}")
+            raise RuntimeError(f"Failed to connect to camera stream (ensure GStreamer is installed)")
         
         yield rp_socket, robot, model_d, model_c, cap
         
