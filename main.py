@@ -80,13 +80,16 @@ def initialize_resources():
         model_c.eval()
         
         # Connect to the Raspberry Pi H.264 camera stream using ffmpeg subprocess
-        # This avoids requiring GStreamer support in OpenCV and keeps low latency.
+        # Use a background reader thread to avoid blocking the GUI.
         class FFmpegCapture:
-            def __init__(self, host, port, width=640, height=480):
+            def __init__(self, host, port, width=640, height=480, reconnect=True):
                 self.width = width
                 self.height = height
                 self.frame_size = width * height * 3
-                cmd = [
+                self.host = host
+                self.port = port
+                self.reconnect = reconnect
+                self.cmd = [
                     "ffmpeg",
                     "-hide_banner",
                     "-loglevel", "error",
@@ -96,24 +99,66 @@ def initialize_resources():
                     "-s", f"{width}x{height}",
                     "-",
                 ]
+                self.proc = None
+                self.latest_frame = None
+                self.lock = threading.Lock()
+                self.running = True
+                self._start_proc()
+                self.thread = threading.Thread(target=self._reader_loop, daemon=True)
+                self.thread.start()
+
+            def _start_proc(self):
                 try:
-                    self.proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+                    self.proc = subprocess.Popen(self.cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, bufsize=10**8)
+                    threading.Thread(target=self._drain_stderr, daemon=True).start()
                 except FileNotFoundError:
                     raise RuntimeError("ffmpeg not found. Install with: sudo apt install ffmpeg")
 
+            def _drain_stderr(self):
+                try:
+                    for line in iter(self.proc.stderr.readline, b""):
+                        logger.debug("ffmpeg: %s", line.decode().strip())
+                except Exception:
+                    pass
+
+            def _reader_loop(self):
+                while self.running:
+                    if not self.proc or self.proc.poll() is not None:
+                        if not self.reconnect:
+                            break
+                        time.sleep(1)
+                        try:
+                            self._start_proc()
+                        except Exception as e:
+                            logger.warning("Failed to restart ffmpeg: %s", e)
+                            time.sleep(1)
+                            continue
+
+                    try:
+                        raw = self.proc.stdout.read(self.frame_size)
+                        if not raw or len(raw) != self.frame_size:
+                            time.sleep(0.01)
+                            continue
+                        frame = np.frombuffer(raw, dtype=np.uint8).reshape((self.height, self.width, 3))
+                        with self.lock:
+                            self.latest_frame = frame
+                    except Exception as e:
+                        logger.debug("Error reading ffmpeg stdout: %s", e)
+                        time.sleep(0.01)
+
             def read(self):
-                raw = self.proc.stdout.read(self.frame_size)
-                if not raw or len(raw) != self.frame_size:
-                    return False, None
-                frame = np.frombuffer(raw, dtype=np.uint8).reshape((self.height, self.width, 3))
-                return True, frame
+                with self.lock:
+                    if self.latest_frame is None:
+                        return False, None
+                    return True, self.latest_frame.copy()
 
             def isOpened(self):
-                return hasattr(self, "proc") and (self.proc.poll() is None)
+                return self.running
 
             def release(self):
+                self.running = False
                 try:
-                    if hasattr(self, "proc"):
+                    if self.proc:
                         self.proc.terminate()
                         self.proc.wait(timeout=1)
                 except Exception:
