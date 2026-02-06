@@ -14,7 +14,7 @@ def index():
 
 def gen():
 	"""Video streaming generator function"""
-	vs = cv2.VideoCapture(0)
+	vs = cv2.VideoCapture(0, cv2.CAP_V4L2)  # Use V4L2 backend for better performance on Linux
 	
 	# Check if camera opened successfully
 	if not vs.isOpened():
