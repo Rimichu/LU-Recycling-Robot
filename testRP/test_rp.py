@@ -11,15 +11,20 @@ def index():
 def gen():
 	"""Video streaming generator function"""
 	vs = cv2.VideoCapture(0)
-	while True:
-		ret, frame = vs.read()
-		ret, jpeg = cv2.imencode('.jpg', frame)
-		frame = jpeg.tobytes()
-		yield (b'--frame\r\n'
-		b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
-
-	vs.release()
-	cv2.destroyAllWindows()
+	try:
+		while True:
+			ret, frame = vs.read()
+			if not ret:
+				break
+			ret, jpeg = cv2.imencode('.jpg', frame)
+			if not ret:
+				break
+			frame = jpeg.tobytes()
+			yield (b'--frame\r\n'
+			b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n')
+	finally:
+		vs.release()
+		cv2.destroyAllWindows()
 
 @app.route('/video_feed')
 def video_feed():
