@@ -1,14 +1,17 @@
 import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
+import logging
 from events.event import EventLoop
 from kuka.constants import CLASSIFY_HEIGHT, CAM_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
-from kuka.comms import movehome, queuegrip, queuemove, moveOff
+from kuka.comms import movehome, pi_reconnect, queuegrip, queuemove, moveOff
 from kuka.utils import pixels2mm, width2angle
 from kuka_comm_lib import KukaRobot
 import rp.pi_constants as const
+
+logger = logging.getLogger(__name__)
 
 
 class ControlPanel(tk.Tk):
@@ -158,7 +161,7 @@ class ControlPanel(tk.Tk):
         """
         if not self.lock:
             self.lock = True
-            print("Lock obtained")
+            logger.debug("Lock obtained")
             return True
         return False
 
@@ -211,7 +214,7 @@ class ControlPanel(tk.Tk):
         # Begin critical section
         if is_detected and not self.lock and not self.quitting:
 
-            print("In critical section...")
+            logger.info("In critical section...")
 
             self.lock = True
 
@@ -223,7 +226,8 @@ class ControlPanel(tk.Tk):
 
             x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            # x and y are inverted?
+            # TODO: This functionality should be adjusted based on constant value of what the camera angle is
+            # x and y are inverted? (As camera is rotated 90 degrees)
             x_mm, y_mm = y_mm, x_mm
 
             self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
@@ -249,3 +253,6 @@ class ControlPanel(tk.Tk):
 
         if not self.quitting:
             self.label_img.after(20, self.video_stream, cap, model_d, model_c)
+            
+    def reconnect_pi(self):
+        self.rp_socket = pi_reconnect(self.rp_socket)

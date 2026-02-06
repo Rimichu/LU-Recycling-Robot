@@ -8,6 +8,7 @@ from kuka.comms import movehome, queuegrip, queuemove
 from torchvision import transforms
 import tkinter as tk
 import rp.pi_constants as const
+import logging
 
 def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     """
@@ -21,12 +22,14 @@ def classify_object(model_c, cap: VideoCapture, class_label: tk.Label):
     """
 
     # Capture frame from camera, classify object and move robot accordingly
-    _, frame = cap.read()
-    print("start classify")
+    ret, frame = cap.read()
+    if not ret or frame is None:
+        raise Exception("Failed to capture frame from camera for classification")
+    logging.info("start classify")
     img = process_image(frame)
     logits = model_c(img)
     dest_bin = int(torch.argmax(logits, dim=1).item())
-    print("classify done: ", dest_bin, get_label(dest_bin))
+    logging.info("classify done: %d %s", dest_bin, get_label(dest_bin))
     class_label.config(text=f"Object Type: {get_label(dest_bin)}")
 
     return dest_bin
@@ -46,54 +49,51 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     """
 
     # Move robot to pick-up object
-    eloop.run(lambda: print("Moving to object position:", position))
+    eloop.run(lambda: logging.info("Moving to object position: %s", position))
     queuemove(eloop, robot, lambda: robot.goto(x=position[0], y=position[1], z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Setting grip angle:", grip_angle))
+    eloop.run(lambda: logging.info("Setting grip angle: %s", grip_angle))
     queuemove(eloop, robot, lambda: robot.goto(a = grip_angle[0], b = grip_angle[1], c = grip_angle[2]))
-    eloop.run(lambda: print("Open Claw"))
+    eloop.run(lambda: logging.info("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    eloop.run(lambda: print("Moving Down"))
+    eloop.run(lambda: logging.info("Moving Down"))
     queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("Close Claw"))
+    eloop.run(lambda: logging.info("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    eloop.run(lambda: print("Going Up"))
+    eloop.run(lambda: logging.info("Going Up"))
     queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Trash picked up"))
-
+    eloop.run(lambda: logging.info("Trash picked up"))
     # Move robot to appropriate bin and release object
     bin_x, bin_y = BIN_DICT[dest_bin]
-    eloop.run(lambda: print("Moving to bin:", bin_x, bin_y))
+    eloop.run(lambda: logging.info("Moving to bin: %d, %d", bin_x, bin_y))
     queuemove(eloop, robot, lambda: robot.goto(bin_x, bin_y))
-    # eloop.run(lambda: print("Moving Down"))
+    # eloop.run(lambda: logging.info("Moving Down"))
     # queuemove(eloop, robot, lambda: robot.goto(z=OBJECT_HEIGHT))
-    eloop.run(lambda: print("Open Claw"))
+    eloop.run(lambda: logging.info("Open Claw"))
     queuegrip(eloop, const.COMMAND_OPEN, rp_socket)
-    # eloop.run(lambda: print("Moving Up"))
+    # eloop.run(lambda: logging.info("Moving Up"))
     # queuemove(eloop, robot, lambda: robot.goto(z=CLASSIFY_HEIGHT))
-    eloop.run(lambda: print("Close Claw"))
+    eloop.run(lambda: logging.info("Close Claw"))
     queuegrip(eloop, const.COMMAND_CLOSE, rp_socket)
-    eloop.run(lambda: print("Moving Home"))
+    eloop.run(lambda: logging.info("Moving Home"))
     queuemove(eloop, robot, lambda: movehome(robot))
-    eloop.run(lambda: print("Arrived Home"))
+    eloop.run(lambda: logging.info("Arrived Home"))
     unlock()
-    eloop.run(lambda: print("Ready to Detect"))
+    eloop.run(lambda: logging.info("Ready to Detect"))
 
+
+# Module level device and transform to avoid reinitialization on every classification
+_DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+_TRANSFORM = transforms.Compose([
+    transforms.ToPILImage(),
+    transforms.Resize([224, 224]),
+    transforms.ToTensor()
+])
 
 def process_image(img):
     """
-    Preprocess the image for classification.
-    
-    :param img: Input image in BGR format
+    Process the captured image for classification by applying necessary transformations.
     """
-    transform = transforms.Compose([
-        transforms.ToPILImage(),
-        transforms.Resize([224,224]),
-        transforms.ToTensor()
-    ])
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    return transform(img).unsqueeze(0).to(device)
+    return _TRANSFORM(img).unsqueeze(0).to(_DEVICE)
 
 def get_label(idx):
     """
