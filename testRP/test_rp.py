@@ -14,14 +14,22 @@ def index():
 
 def gen():
 	"""Video streaming generator function"""
-	# Try different backends and settings
-	vs = cv2.VideoCapture(0)
-	vs.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # Reduce buffer
+	# Force V4L2 backend to avoid GStreamer memory issues
+	vs = cv2.VideoCapture(0, cv2.CAP_V4L2)
+	
+	# Set camera parameters
+	vs.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M','J','P','G'))
+	vs.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+	vs.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
+	vs.set(cv2.CAP_PROP_FPS, 30)
+	vs.set(cv2.CAP_PROP_BUFFERSIZE, 1)
 	
 	# Check if camera opened successfully
 	if not vs.isOpened():
 		logger.error("Failed to open camera device /dev/video0")
 		return
+	
+	logger.info(f"Camera opened: {vs.get(cv2.CAP_PROP_FRAME_WIDTH)}x{vs.get(cv2.CAP_PROP_FRAME_HEIGHT)} @ {vs.get(cv2.CAP_PROP_FPS)} FPS")
 	
 	frame_count = 0
 	try:
@@ -43,6 +51,7 @@ def gen():
 	finally:
 		vs.release()
 		cv2.destroyAllWindows()
+		logger.info(f"Camera released after {frame_count} frames")
 
 @app.route('/video_feed')
 def video_feed():
