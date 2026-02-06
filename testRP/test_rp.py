@@ -43,7 +43,11 @@ def gen():
 @app.route('/video_feed')
 def video_feed():
 	"""Video streaming route."""
-	return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
+	try:
+		return Response(gen(), mimetype='multipart/x-mixed-replace; boundary=frame')
+	except Exception as e:
+		logger.error(f"Error in video feed route: {e}")
+		return "Error: Unable to access camera", 500
 
 if __name__ == '__main__':
 	app.run(host='0.0.0.0', port = 5000, debug = True, threaded = True)
