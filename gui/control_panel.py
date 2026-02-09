@@ -48,9 +48,9 @@ class ControlPanel(tk.Tk):
         self.lock = True
         self.quitting = False
 
-        # Get robot to starting position
+        # Get robot to starting position (robot should already have a closed gribber)
         queuemove(self.eloop, self.robot, lambda: movehome(self.robot))
-        queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
+        # queuegrip(self.eloop, const.COMMAND_CLOSE, self.rp_socket)
         
         # Init lock to allow object processing
         self.eloop.run(self.free_lock)
