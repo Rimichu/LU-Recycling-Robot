@@ -1,6 +1,6 @@
 from contextlib import contextmanager
 import threading
-from time import time
+import time
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
 from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT, PI_CAMERA_PORT
