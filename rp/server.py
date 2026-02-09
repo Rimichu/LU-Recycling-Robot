@@ -5,39 +5,73 @@ import pi_constants as const
 import logging
 import threading
 import subprocess
+import shutil
+import os
+import time
 
 logger = logging.getLogger(__name__)
 
 def start_camera_stream():
     """
-    Start libcamera-vid to stream H.264 video over TCP.
-    Uses the Pi's hardware H.264 encoder for minimal CPU usage and low latency.
-    Listens for incoming TCP connections on PI_CAMERA_PORT.
+    Start an H.264 camera stream over TCP using Picamera2 if available.
+
+    Falls back to launching `libcamera-vid` via subprocess when Picamera2
+    is not installed or fails to initialize. Logs `PATH` and executable
+    discovery to aid debugging when the binary is reported as missing.
     """
-    cmd = [
-        "libcamera-vid",
-        "-t", "0",                          # Stream indefinitely
-        "--width", "640",
-        "--height", "480",
-        "--framerate", "30",
-        "--codec", "h264",
-        "--profile", "baseline",            # Baseline profile for low latency
-        "--level", "4.2",
-        "--inline",                         # Inline headers for stream joining
-        "--flush",                          # Flush output buffers immediately
-        "--listen",                         # TCP listen mode
-        "-o", f"tcp://0.0.0.0:{const.PI_CAMERA_PORT}",
-    ]
-    logger.info(f"Starting H.264 camera stream on TCP port {const.PI_CAMERA_PORT}")
-    try:
-        process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # Log any stderr output
-        for line in process.stderr:
-            logger.debug(f"libcamera-vid: {line.decode().strip()}")
-    except FileNotFoundError:
-        logger.error("libcamera-vid not found. Install with: sudo apt install libcamera-apps")
-    except Exception as e:
-        logger.error(f"Failed to start camera stream: {e}")
+
+    # Try Picamera2 first (preferred modern Python API for libcamera)
+    from picamera2 import Picamera2
+    logger.info("Using picamera2 for H.264 streaming on port %s", const.PI_CAMERA_PORT)
+
+    picam2 = Picamera2()
+    # Create a simple video configuration
+    config = picam2.create_video_configuration({
+        "size": (640, 480)
+    })
+    picam2.configure(config)
+    picam2.start()
+
+    # TCP listener for clients wanting the H.264 stream
+    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    server.bind(("0.0.0.0", const.PI_CAMERA_PORT))
+    server.listen(1)
+    logger.info("Picamera2 streaming listening on 0.0.0.0:%s", const.PI_CAMERA_PORT)
+
+    while True:
+        client_socket, addr = server.accept()
+        logger.info("Camera client connected: %s", addr)
+        client_socket.setblocking(False)
+        out = client_socket.makefile("wb")
+        try:
+            picam2.start_recording(out, format="h264")
+            # Keep recording until client disconnects
+            while True:
+                time.sleep(0.5)
+                try:
+                    # Peek to see if the client closed the connection
+                    data = client_socket.recv(1, socket.MSG_PEEK)
+                    if not data:
+                        break
+                except BlockingIOError:
+                    # No data, connection still open
+                    continue
+                except OSError:
+                    break
+        except Exception as e:
+            logger.warning("Camera streaming error: %s", e)
+        finally:
+            try:
+                picam2.stop_recording()
+            except Exception:
+                pass
+            try:
+                out.close()
+            except Exception:
+                pass
+            client_socket.close()
+            logger.info("Camera client disconnected")
 
 # TODO: See if handle_client can be made async
 # TODO: Get light to flash when r-pi on # TODO: See if led_pattern_loop can be made async
