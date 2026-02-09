@@ -4,9 +4,6 @@ import servo
 import pi_constants as const
 import logging
 import threading
-import subprocess
-import shutil
-import os
 import time
 
 logger = logging.getLogger(__name__)
@@ -21,57 +18,67 @@ def start_camera_stream():
     """
 
     # Try Picamera2 first (preferred modern Python API for libcamera)
-    from picamera2 import Picamera2
-    logger.info("Using picamera2 for H.264 streaming on port %s", const.PI_CAMERA_PORT)
+    try:
+        from picamera2 import Picamera2
+        from picamera2.encoders import H264Encoder
+        from picamera2.outputs import FileOutput
 
-    picam2 = Picamera2()
-    # Create a simple video configuration
-    config = picam2.create_video_configuration({
-        "size": (640, 480)
-    })
-    picam2.configure(config)
-    picam2.start()
+        logger.info("Using picamera2 for H.264 streaming on port %s", const.PI_CAMERA_PORT)
 
-    # TCP listener for clients wanting the H.264 stream
-    server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind(("0.0.0.0", const.PI_CAMERA_PORT))
-    server.listen(1)
-    logger.info("Picamera2 streaming listening on 0.0.0.0:%s", const.PI_CAMERA_PORT)
+        picam2 = Picamera2()
+        # Create a simple video configuration
+        config = picam2.create_video_configuration({
+            "size": (640, 480)
+        })
+        picam2.configure(config)
+        picam2.start()
 
-    while True:
-        client_socket, addr = server.accept()
-        logger.info("Camera client connected: %s", addr)
-        client_socket.setblocking(False)
-        out = client_socket.makefile("wb")
-        try:
-            picam2.start_recording(out, format="h264")
-            # Keep recording until client disconnects
-            while True:
-                time.sleep(0.5)
-                try:
-                    # Peek to see if the client closed the connection
-                    data = client_socket.recv(1, socket.MSG_PEEK)
-                    if not data:
+        # TCP listener for clients wanting the H.264 stream
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.bind(("0.0.0.0", const.PI_CAMERA_PORT))
+        server.listen(1)
+        logger.info("Picamera2 streaming listening on 0.0.0.0:%s", const.PI_CAMERA_PORT)
+
+        while True:
+            client_socket, addr = server.accept()
+            logger.info("Camera client connected: %s", addr)
+            out = client_socket.makefile("wb")
+            output = FileOutput(out)
+            encoder = H264Encoder()
+            try:
+                picam2.start_recording(encoder, output)
+                # Keep recording until client disconnects
+                while True:
+                    time.sleep(0.5)
+                    try:
+                        # Peek to see if the client closed the connection
+                        data = client_socket.recv(1, socket.MSG_PEEK)
+                        if not data:
+                            break
+                    except BlockingIOError:
+                        # No data, connection still open
+                        continue
+                    except OSError:
                         break
-                except BlockingIOError:
-                    # No data, connection still open
-                    continue
-                except OSError:
-                    break
-        except Exception as e:
-            logger.warning("Camera streaming error: %s", e)
-        finally:
-            try:
-                picam2.stop_recording()
-            except Exception:
-                pass
-            try:
-                out.close()
-            except Exception:
-                pass
-            client_socket.close()
-            logger.info("Camera client disconnected")
+            except Exception as e:
+                logger.warning("Camera streaming error: %s", e)
+            finally:
+                try:
+                    picam2.stop_recording()
+                except Exception:
+                    pass
+                try:
+                    out.close()
+                except Exception:
+                    pass
+                client_socket.close()
+                logger.info("Camera client disconnected")
+
+    except Exception as pic_err:
+        # Picamera2 not available or failed to initialize — report and stop
+        logger.error("picamera2 initialization failed: %s", pic_err)
+        return
 
 # TODO: See if handle_client can be made async
 # TODO: Get light to flash when r-pi on # TODO: See if led_pattern_loop can be made async
