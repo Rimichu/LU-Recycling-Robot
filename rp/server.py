@@ -28,7 +28,7 @@ def start_camera_stream():
         picam2 = Picamera2()
         # Create a simple video configuration
         config = picam2.create_video_configuration({
-            "size": (640, 480)
+            "size": (1080, 1920) # TODO: Larger resolution may cause performance issues;
         })
         picam2.configure(config)
         picam2.start()
