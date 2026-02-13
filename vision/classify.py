@@ -77,7 +77,7 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     eloop.run(lambda: logging.info("Moving Home"))
     queuemove(eloop, robot, lambda: movehome(robot))
     eloop.run(lambda: logging.info("Arrived Home"))
-    unlock()
+    eloop.run(lambda: unlock())
     eloop.run(lambda: logging.info("Ready to Detect"))
 
 
