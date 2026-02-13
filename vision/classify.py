@@ -77,7 +77,7 @@ def dispose_of_object(rp_socket, eloop: EventLoop, robot: KukaRobot, unlock: Cal
     eloop.run(lambda: logging.info("Moving Home"))
     queuemove(eloop, robot, lambda: movehome(robot))
     eloop.run(lambda: logging.info("Arrived Home"))
-    eloop.after(1000, unlock) # Unlock control panel after 1 second to ensure robot has finished moving, also gives enough time for camera to adjust for next detection
+    eloop.wait_and_run(1000, unlock) # Unlock control panel after 1 second to ensure robot has finished moving, also gives enough time for camera to adjust for next detection
     eloop.run(lambda: logging.info("Ready to Detect"))
 
 

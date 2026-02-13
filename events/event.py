@@ -166,6 +166,31 @@ class EventLoop:
         self.run(func)
         self.sleep_until(condition)
 
+    def wait_and_run(self, condition: Union[Callable[[], bool], int, float], func: Callable):
+        """
+        Wait until a condition is met or for a specified duration, then run a function.
+
+        If `condition` is a callable it will be evaluated repeatedly until it returns True.
+        If `condition` is a numeric value (int or float) it is treated as a duration in
+        milliseconds to sleep before running `func`.
+
+        :param self: Self instance
+        :param condition: Condition to wait for or duration in milliseconds
+            :type condition: Callable[[], bool] | int | float
+        :param func: Function to be run after condition is met / time elapsed
+            :type func: Callable
+        """
+        if callable(condition):
+            self.sleep_until(lambda: condition())
+        elif isinstance(condition, (int, float)):
+            # Treat numeric values as milliseconds (consistent with EventLoop.sleep)
+            self.sleep(int(condition))
+        else:
+            raise TypeError("condition must be a callable or numeric milliseconds")
+
+        self.run(func)
+
+
     def _sleep_until(self, func: Callable[[], bool]):
         """
         Internal method to handle sleep until condition is met.
