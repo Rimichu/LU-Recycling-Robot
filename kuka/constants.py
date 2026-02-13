@@ -25,8 +25,9 @@ OBJECT_HEIGHT = 0
 # TOOL_ANGLE = [177.74, -0.46, 172.27]
 # POS: x, y, z (mm)
 # Angle: yaw, pitch, roll (degrees)
-HOME_POS = [340, 912, DETECT_HEIGHT]
-TOOL_ANGLE = [174, 10, -180]
+HOME_POS = [350, 720, DETECT_HEIGHT]
+# TOOL_ANGLE = [174, 10, -180]
+TOOL_ANGLE = [180, 0, 180] # For testing, to be adjusted later based on camera angle and object position
 CONVEYOR_HEIGHT = -100 # In relation to robot home position
 
 OFF_POS = [950, 800, OBJECT_HEIGHT]
