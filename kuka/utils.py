@@ -15,7 +15,9 @@ def calculate_base(angle_degrees, height):
     
     return base
 
-def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height=1920):
+def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height=1920,
+              fx: float = 1550, fy: float = 1550, cx: float = 540, cy: float = 960,
+              z_mm: float = DETECT_HEIGHT - CONVEYOR_HEIGHT):
     """
     Convert pixel coordinates and dimensions to millimeters based on camera parameters.
     
@@ -25,30 +27,44 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     :param h_pixel: Height of the detected object in pixels
     :param frame_width: Width of the video frame in pixels
     :param frame_height: Height of the video frame in pixels
+    :param fx: Focal length in pixels along the x-axis
+    :param fy: Focal length in pixels along the y-axis
+    :param cx: Principal point x-coordinate in pixels
+    :param cy: Principal point y-coordinate in pixels
+    :param z_mm: Estimated depth (Z coordinate) of the object in millimeters
     """
     logging.info("Size of frame: Width: %d, Height: %d", frame_width, frame_height)
 
-    w_mm_total = calculate_base(CAM_X_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
-    h_mm_total = calculate_base(CAM_Y_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
-    logging.info("Total width in mm: %f, Total height in mm: %f", w_mm_total, h_mm_total)
+    # Convert pixel center to image coordinates (use box centre)
+    x_obj_mid = x_pixel + (w_pixel / 2.0)
+    y_obj_mid = y_pixel + (h_pixel / 2.0)
 
-    x_obj_mid = x_pixel + (w_pixel/2)
-    y_obj_mid = y_pixel + (h_pixel/2)
-    logging.info("Object midpoint in pixels: X: %f, Y: %f", x_obj_mid, y_obj_mid)
+    # Normalized camera coordinates
+    x_n = (x_obj_mid - cx) / fx
+    y_n = (y_obj_mid - cy) / fy
 
-    # Convert ratios to mm relative to home position
-    x_ratio = (x_obj_mid / frame_width) - 0.5
-    y_ratio = (y_obj_mid / frame_height) - 0.5
-    logging.info("Object midpoint ratios: X: %f, Y: %f", x_ratio, y_ratio)
+    # Back-project to real-world at known Z (pinhole model): X = x_n * Z, Y = y_n * Z
+    X_mm = x_n * z_mm
+    Y_mm = y_n * z_mm
 
-    # Robot should be at home position when detecting, so we can calculate absolute position based on home position and object ratios
-    x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
-    y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
-    
-    # Convert dimensions
-    w_mm = w_pixel * (w_mm_total / frame_width)
-    h_mm = h_pixel * (h_mm_total / frame_height)
+    # Translate so that image centre maps to HOME_POS (maintain previous coordinate convention)
+    # Compute image centre world coords (where u=cx, v=cy)
+    cx_n = (cx - cx) / fx  # zero
+    cy_n = (cy - cy) / fy  # zero
+    Xc_mm = cx_n * z_mm
+    Yc_mm = cy_n * z_mm
 
+    # Home position is expected to correspond to image centre — offset accordingly
+    x_mm = HOME_POS[0] + (X_mm - Xc_mm)
+    y_mm = HOME_POS[1] + (Y_mm - Yc_mm)
+
+    # Sizes: compute mm per pixel at object depth using fx/fy
+    mm_per_pixel_x = z_mm / fx
+    mm_per_pixel_y = z_mm / fy
+    w_mm = w_pixel * mm_per_pixel_x
+    h_mm = h_pixel * mm_per_pixel_y
+
+    logging.debug("Pinhole mapping: x_mid=%f y_mid=%f -> X_mm=%f Y_mm=%f", x_obj_mid, y_obj_mid, x_mm, y_mm)
     return x_mm, y_mm, w_mm, h_mm
 
 
