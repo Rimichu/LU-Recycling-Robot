@@ -15,7 +15,7 @@ def calculate_base(angle_degrees, height):
     
     return base
 
-def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, robot=None, frame_width=1080, frame_height=1920):
+def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height=1920):
     """
     Convert pixel coordinates and dimensions to millimeters based on camera parameters.
     
@@ -41,13 +41,9 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, robot=None, frame_width=1080, 
     y_ratio = (y_obj_mid / frame_height) - 0.5
     logging.info("Object midpoint ratios: X: %f, Y: %f", x_ratio, y_ratio)
 
-    if robot is None:
-        x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
-        y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
-    else:
-        current_pos = robot.get_current_position()
-        x_mm = current_pos.x + (w_mm_total * x_ratio)
-        y_mm = current_pos.y + (h_mm_total * y_ratio)
+    # Robot should be at home position when detecting, so we can calculate absolute position based on home position and object ratios
+    x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
+    y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
     
     # Convert dimensions
     w_mm = w_pixel * (w_mm_total / frame_width)

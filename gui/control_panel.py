@@ -225,10 +225,9 @@ class ControlPanel(tk.Tk):
             # self.update_label(self.object_height_label, "Height : " + str(h_pixel))
             # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
 
-            x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, self.robot)
+            x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            # TODO: This functionality should be adjusted based on constant value of what the camera angle is
-            # x and y are inverted? (As camera is rotated 90 degrees)
+            # Robot, x = forward/backward, y = left/right, so needs to be swapped
             x_mm, y_mm = y_mm, x_mm
 
             logging.info("Object detected at (pixels): X: %d, Y: %d, Width: %d, Height: %d", x_pixel, y_pixel, w_pixel, h_pixel)
