@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import cv2
 import logging
 from events.event import EventLoop
-from kuka.constants import CLASSIFY_HEIGHT, CAM_POS
+from kuka.constants import CAM_X_ANG, CLASSIFY_HEIGHT, CAM_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, pi_reconnect, queuegrip, queuemove, moveOff
@@ -205,7 +205,8 @@ class ControlPanel(tk.Tk):
             self.label_img.after(20, self.video_stream, cap, model_d, model_c)
             return
 
-        is_detected, x_pixel, y_pixel, w_pixel, h_pixel = (
+        # Invert x and y pixel values to account for camera orientation
+        is_detected, y_pixel, x_pixel, w_pixel, h_pixel = (
             process_frame(frame, model_d)
         )
 

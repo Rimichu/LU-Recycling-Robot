@@ -1,3 +1,4 @@
+import logging
 import math
 from kuka.constants import *
 
@@ -25,15 +26,20 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, robot=None, frame_width=1080, 
     :param frame_width: Width of the video frame in pixels
     :param frame_height: Height of the video frame in pixels
     """
+    logging.info("Size of frame: Width: %d, Height: %d", frame_width, frame_height)
+
     w_mm_total = calculate_base(CAM_X_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
     h_mm_total = calculate_base(CAM_Y_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
+    logging.info("Total width in mm: %f, Total height in mm: %f", w_mm_total, h_mm_total)
 
     x_obj_mid = x_pixel + (w_pixel/2)
     y_obj_mid = y_pixel + (h_pixel/2)
+    logging.info("Object midpoint in pixels: X: %f, Y: %f", x_obj_mid, y_obj_mid)
 
     # Convert ratios to mm relative to home position
     x_ratio = (x_obj_mid / frame_width) - 0.5
     y_ratio = (y_obj_mid / frame_height) - 0.5
+    logging.info("Object midpoint ratios: X: %f, Y: %f", x_ratio, y_ratio)
 
     if robot is None:
         x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
