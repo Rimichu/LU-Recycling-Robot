@@ -5,8 +5,8 @@ def calculate_base(angle_degrees, height):
     """
     Calculate the base length of a right triangle given an angle and height.
     
-    :param angle_degrees: Angle in degrees
-    :param height: Height of the triangle in mm(?not sure if mm is true whilst writing this?)
+    :param angle_degrees: Angle in degrees between the height and the hypotenuse
+    :param height: Height of the triangle in mm
     """
 
     angle_radians = math.radians(angle_degrees)
@@ -14,7 +14,7 @@ def calculate_base(angle_degrees, height):
     
     return base
 
-def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height=1920):
+def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, robot=None, frame_width=1080, frame_height=1920):
     """
     Convert pixel coordinates and dimensions to millimeters based on camera parameters.
     
@@ -25,8 +25,8 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     :param frame_width: Width of the video frame in pixels
     :param frame_height: Height of the video frame in pixels
     """
-    w_mm_total = calculate_base(CAM_X_ANG, DETECT_HEIGHT) * 2
-    h_mm_total = calculate_base(CAM_Y_ANG, DETECT_HEIGHT) * 2
+    w_mm_total = calculate_base(CAM_X_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
+    h_mm_total = calculate_base(CAM_Y_ANG, DETECT_HEIGHT - CONVEYOR_HEIGHT) * 2
 
     x_obj_mid = x_pixel + (w_pixel/2)
     y_obj_mid = y_pixel + (h_pixel/2)
@@ -35,8 +35,12 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     x_ratio = (x_obj_mid / frame_width) - 0.5
     y_ratio = (y_obj_mid / frame_height) - 0.5
 
-    x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
-    y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
+    if robot is None:
+        x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
+        y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
+    else:
+        x_mm = robot.current_pos.x + (w_mm_total * x_ratio)
+        y_mm = robot.current_pos.y + (h_mm_total * y_ratio)
     
     # Convert dimensions
     w_mm = w_pixel * (w_mm_total / frame_width)

@@ -1,5 +1,5 @@
-CAM_X_ANG = 180
-CAM_Y_ANG = 0
+CAM_X_ANG = 0
+CAM_Y_ANG = 48
 CAM_POS = [150, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos) 
 
 # All bin positions (x,y) are the same for now, to be updated later
@@ -27,6 +27,7 @@ OBJECT_HEIGHT = 0
 # Angle: yaw, pitch, roll (degrees)
 HOME_POS = [340, 912, DETECT_HEIGHT]
 TOOL_ANGLE = [174, 10, -180]
+CONVEYOR_HEIGHT = -100 # In relation to robot home position
 
 OFF_POS = [950, 800, OBJECT_HEIGHT]
 OFF_TOOL_ANGLE = [180, 0, 180]

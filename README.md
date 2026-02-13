@@ -1,11 +1,8 @@
-# Automated Waste Sorter
-
-For a demo and more information, see [page](https://mbaranr.github.io/projects/waste_sorting/).
+# Automated Recycling Robot
+An automated waste sorting system that uses a KUKA KR180 industrial robot arm, a Raspberry Pi controller gripper and Camera (V3), deep learning models via YOLOv5 with a custom classifier and a Tkinter GUI; Put together to detect, classify, pick up and sort waste into the correct bin.
 
 ## Installing Dependencies
-
 ```
-$ cd waste-sorter
 $ conda env create -f env.yaml
 $ conda activate kuka
 ```
@@ -22,3 +19,7 @@ $ conda activate kuka
 - Isaac Richardson
 - Andre Mariucci
 - Toby Vermon
+
+# Original Project
+
+https://github.com/LUComp/waste-sorter
