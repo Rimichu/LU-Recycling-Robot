@@ -230,6 +230,8 @@ class ControlPanel(tk.Tk):
             # x and y are inverted? (As camera is rotated 90 degrees)
             x_mm, y_mm = y_mm, x_mm
 
+            logging.info("Object detected at (pixels): X: %d, Y: %d, Width: %d, Height: %d", x_pixel, y_pixel, w_pixel, h_pixel)
+            logging.info("Object at (mm): X: %f, Y: %f, Width: %f, Height: %f", x_mm, y_mm, w_mm, h_mm)
             self.update_label(self.object_x_label, "X :" + str(x_mm) + "mm")
             self.update_label(self.object_y_label, "Y :" + str(y_mm) + "mm")
             self.update_label(self.object_height_label, "Height :" + str(w_mm) + "mm")
