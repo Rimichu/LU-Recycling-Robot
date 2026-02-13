@@ -39,8 +39,9 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, robot=None, frame_width=1080, 
         x_mm = HOME_POS[0] + (w_mm_total * x_ratio)
         y_mm = HOME_POS[1] + (h_mm_total * y_ratio)
     else:
-        x_mm = robot.current_pos.x + (w_mm_total * x_ratio)
-        y_mm = robot.current_pos.y + (h_mm_total * y_ratio)
+        current_pos = robot.get_current_position()
+        x_mm = current_pos.x + (w_mm_total * x_ratio)
+        y_mm = current_pos.y + (h_mm_total * y_ratio)
     
     # Convert dimensions
     w_mm = w_pixel * (w_mm_total / frame_width)
