@@ -32,6 +32,12 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     :param cx: Principal point x-coordinate in pixels
     :param cy: Principal point y-coordinate in pixels
     :param z_mm: Estimated depth (Z coordinate) of the object in millimeters
+
+    :return: Tuple containing:
+        - x_mm: X coordinate of the object in millimeters (relative to robot home position)
+        - y_mm: Y coordinate of the object in millimeters (relative to robot home position)
+        - w_mm: Width of the object in millimeters
+        - h_mm: Height of the object in millimeters
     """
     logging.info("pixels2mm called with x=%s y=%s w=%s h=%s frame=%dx%d", x_pixel, y_pixel, w_pixel, h_pixel, frame_width, frame_height)
     logging.debug("Intrinsics: fx=%s fy=%s cx=%s cy=%s z_mm=%s", fx, fy, cx, cy, z_mm)

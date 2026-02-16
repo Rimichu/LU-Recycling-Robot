@@ -3,7 +3,7 @@ from PIL import Image, ImageTk
 import cv2
 import logging
 from events.event import EventLoop
-from kuka.constants import CAM_POS
+from kuka.constants import CAM_POS, HOME_POS
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, pi_reconnect, queuegrip, queuemove, moveOff
@@ -228,7 +228,7 @@ class ControlPanel(tk.Tk):
             x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
             # Robot, x = forward/backward, y = left/right, so needs to be swapped
-            x_mm, y_mm = y_mm, x_mm
+            x_mm, y_mm = y_mm + HOME_POS[1], x_mm + HOME_POS[0]
 
             logging.info("Object detected at (pixels): X: %d, Y: %d, Width: %d, Height: %d", x_pixel, y_pixel, w_pixel, h_pixel)
             logging.info("Object at (mm): X: %f, Y: %f, Width: %f, Height: %f", x_mm, y_mm, w_mm, h_mm)
