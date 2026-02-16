@@ -56,16 +56,10 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     Y_mm = y_n * z_mm
     logging.debug("Back-projected (camera coords) X_mm=%f Y_mm=%f at Z=%s", X_mm, Y_mm, z_mm)
 
-    # Translate so that image centre maps to HOME_POS (maintain previous coordinate convention)
-    # Compute image centre world coords (where u=cx, v=cy)
-    cx_n = (cx - cx) / fx  # zero
-    cy_n = (cy - cy) / fy  # zero
-    Xc_mm = cx_n * z_mm
-    Yc_mm = cy_n * z_mm
-
-    # Home position is expected to correspond to image centre — offset accordingly
-    x_mm = -X_mm # HOME_POS[0] + (X_mm - Xc_mm)
-    y_mm = -Y_mm # HOME_POS[1] + (Y_mm - Yc_mm)
+    # Map camera coordinates to robot coordinates
+    # Image center (cx, cy) corresponds to HOME_POS, so offset from center
+    x_mm = HOME_POS[0] - X_mm
+    y_mm = HOME_POS[1] - Y_mm
     logging.debug("Mapped to robot coords: x_mm=%f y_mm=%f (HOME_POS=%s)", x_mm, y_mm, HOME_POS)
 
     # Sizes: compute mm per pixel at object depth using fx/fy
