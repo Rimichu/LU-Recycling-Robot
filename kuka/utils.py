@@ -19,8 +19,12 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
               fx: float = 1550, fy: float = 1550, cx: float = 540, cy: float = 960,
               z_mm: float = DETECT_HEIGHT - CONVEYOR_HEIGHT):
     """
-    Convert pixel coordinates and dimensions to millimeters based on camera parameters.
+    Convert pixel coordinates and dimensions to millimeter displacements from the camera center.
     
+    Returns how far the object is from the camera's optical axis (image center).
+    An object at the image center returns (0, 0). Positive x = below center,
+    negative x = above center. Positive y = right of center, negative y = left of center.
+
     :param x_pixel: X coordinate of the detected object in pixels
     :param y_pixel: Y coordinate of the detected object in pixels
     :param w_pixel: Width of the detected object in pixels
@@ -34,8 +38,8 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     :param z_mm: Estimated depth (Z coordinate) of the object in millimeters
 
     :return: Tuple containing:
-        - x_mm: X coordinate of the object in millimeters (relative to robot home position)
-        - y_mm: Y coordinate of the object in millimeters (relative to robot home position)
+        - x_mm: X displacement from camera center in millimeters
+        - y_mm: Y displacement from camera center in millimeters
         - w_mm: Width of the object in millimeters
         - h_mm: Height of the object in millimeters
     """
@@ -46,21 +50,16 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     x_obj_mid = x_pixel + (w_pixel / 2.0)
     y_obj_mid = y_pixel + (h_pixel / 2.0)
 
-    # Normalized camera coordinates
+    # Normalized camera coordinates (displacement from principal point)
     x_n = (x_obj_mid - cx) / fx
     y_n = (y_obj_mid - cy) / fy
     logging.debug("Normalized coords: x_n=%f y_n=%f", x_n, y_n)
 
     # Back-project to real-world at known Z (pinhole model): X = x_n * Z, Y = y_n * Z
-    X_mm = x_n * z_mm
-    Y_mm = y_n * z_mm
-    logging.debug("Back-projected (camera coords) X_mm=%f Y_mm=%f at Z=%s", X_mm, Y_mm, z_mm)
-
-    # Map camera coordinates to robot coordinates
-    # Image center (cx, cy) corresponds to HOME_POS, so offset from center
-    x_mm = HOME_POS[0] - X_mm
-    y_mm = HOME_POS[1] - Y_mm
-    logging.debug("Mapped to robot coords: x_mm=%f y_mm=%f (HOME_POS=%s)", x_mm, y_mm, HOME_POS)
+    # These are displacements from the camera center in mm
+    x_mm = x_n * z_mm
+    y_mm = y_n * z_mm
+    logging.debug("Displacement from camera center: x_mm=%f y_mm=%f at Z=%s", x_mm, y_mm, z_mm)
 
     # Sizes: compute mm per pixel at object depth using fx/fy
     mm_per_pixel_x = z_mm / fx
@@ -70,7 +69,6 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
 
     logging.info("Pinhole result: x_mm=%f y_mm=%f w_mm=%f h_mm=%f mm_per_px=(%f,%f)",
                  x_mm, y_mm, w_mm, h_mm, mm_per_pixel_x, mm_per_pixel_y)
-    logging.debug("Pinhole mapping: x_mid=%f y_mid=%f -> X_mm=%f Y_mm=%f", x_obj_mid, y_obj_mid, X_mm, Y_mm)
     return x_mm, y_mm, w_mm, h_mm
 
 
