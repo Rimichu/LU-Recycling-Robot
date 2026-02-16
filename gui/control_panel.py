@@ -231,14 +231,20 @@ class ControlPanel(tk.Tk):
             # Correct for camera tilt: TOOL_ANGLE = [yaw, pitch, roll]
             # Ideal straight-down orientation is [180, 0, 180].
             # Pitch deviation (B) tilts along one axis, roll deviation (C - 180) tilts along the other.
-            # The tilt shifts where the optical axis lands on the ground by z * tan(angle).
             z_mm = DETECT_HEIGHT - CONVEYOR_HEIGHT
-            pitch_rad = math.radians(TOOL_ANGLE[1])       # B, deviation from 0
-            roll_dev_rad = math.radians(TOOL_ANGLE[2] - 180)  # C deviation from 180
+            pitch_rad = math.radians(TOOL_ANGLE[1])            # B, deviation from 0
+            roll_dev_rad = math.radians(TOOL_ANGLE[2] - 180)   # C deviation from 180
 
-            # Tilt correction: offset in camera frame due to camera not pointing straight down
-            x_mm += z_mm * math.tan(pitch_rad)
-            y_mm += z_mm * math.tan(roll_dev_rad)
+            # Ground-plane projection accounting for tilt AND object displacement:
+            # A tilted camera's ray for an off-center object hits the ground at a
+            # different spot than a naive z*tan(angle) offset would suggest.
+            # For each axis: ground_pos = z * (displacement/z + tan(tilt)) / (1 - (displacement/z) * tan(tilt))
+            # This handles both the center offset and the perspective distortion.
+            tan_p = math.tan(pitch_rad)
+            tan_r = math.tan(roll_dev_rad)
+
+            x_mm = z_mm * (x_mm / z_mm + tan_p) / (1 - (x_mm / z_mm) * tan_p)
+            y_mm = z_mm * (y_mm / z_mm + tan_r) / (1 - (y_mm / z_mm) * tan_r)
 
             # Swap axes: camera x -> robot y, camera y -> robot x
             # Then add HOME_POS to get absolute robot coordinates
