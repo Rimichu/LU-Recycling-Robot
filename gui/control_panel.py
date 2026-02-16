@@ -1,9 +1,10 @@
+import math
 import tkinter as tk
 from PIL import Image, ImageTk
 import cv2
 import logging
 from events.event import EventLoop
-from kuka.constants import CAM_POS, HOME_POS
+from kuka.constants import CAM_POS, HOME_POS, TOOL_ANGLE, DETECT_HEIGHT, CONVEYOR_HEIGHT
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, pi_reconnect, queuegrip, queuemove, moveOff
@@ -224,10 +225,23 @@ class ControlPanel(tk.Tk):
             # self.update_label(self.object_y_label, "Y : " + str(y_pixel))
             # self.update_label(self.object_height_label, "Height : " + str(h_pixel))
             # self.update_label(self.object_width_label, "Width : " + str(w_pixel))
-
+                
             x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
-            # Robot, x = forward/backward, y = left/right, so needs to be swapped
+            # Correct for camera tilt: TOOL_ANGLE = [yaw, pitch, roll]
+            # Ideal straight-down orientation is [180, 0, 180].
+            # Pitch deviation (B) tilts along one axis, roll deviation (C - 180) tilts along the other.
+            # The tilt shifts where the optical axis lands on the ground by z * tan(angle).
+            z_mm = DETECT_HEIGHT - CONVEYOR_HEIGHT
+            pitch_rad = math.radians(TOOL_ANGLE[1])       # B, deviation from 0
+            roll_dev_rad = math.radians(TOOL_ANGLE[2] - 180)  # C deviation from 180
+
+            # Tilt correction: offset in camera frame due to camera not pointing straight down
+            x_mm += z_mm * math.tan(pitch_rad)
+            y_mm += z_mm * math.tan(roll_dev_rad)
+
+            # Swap axes: camera x -> robot y, camera y -> robot x
+            # Then add HOME_POS to get absolute robot coordinates
             x_mm, y_mm = y_mm + HOME_POS[0], x_mm + HOME_POS[1]
 
             logging.info("Object detected at (pixels): X: %d, Y: %d, Width: %d, Height: %d", x_pixel, y_pixel, w_pixel, h_pixel)
