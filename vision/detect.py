@@ -75,9 +75,9 @@ def process_frame(frame, model):
     # Determine if the detected object is near the center of the frame
     # Threshold ensures accuracy of robot moveing to location
 
-    # Adjust these thresholds as needed (currently set to 60% of frame dimensions for testing)
-    DETECTION_X_THRESHOLD = frame.shape[1] * 0.3  # 30% of frame width
-    DETECTION_Y_THRESHOLD = frame.shape[0] * 0.3  # 30% of frame height
+    # Adjust these thresholds as needed (currently set to 100% of frame dimensions for testing)
+    DETECTION_X_THRESHOLD = frame.shape[1] * 0.5  # 50% of frame width
+    DETECTION_Y_THRESHOLD = frame.shape[0] * 0.5  # 50% of frame height
 
     frame_mid_y = frame.shape[0] // 2
     if abs(x_mid - frame_mid_x) < DETECTION_X_THRESHOLD and abs(y_mid - frame_mid_y) < DETECTION_Y_THRESHOLD:
