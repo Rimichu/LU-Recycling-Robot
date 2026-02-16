@@ -35,7 +35,7 @@ def process_frame(frame, model):
     # Get the width of the frame
     frame_width = frame.shape[1]
     frame_mid_x = frame_width // 2  # Screen midpoint (x-axis)
-    logging.debug("Frame width: %d, Midpoint X: %d", frame_width, frame_mid_x)
+    logging.debug("Frame width: %d, Midpoint X: %d, frame height: %d", frame_width, frame_mid_x, frame.shape[0])
 
     x_pixel = 0
     y_pixel = 0
