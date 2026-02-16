@@ -199,6 +199,7 @@ def initialize_resources():
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG) # Uncomment for more verbose logging
     try:
         with initialize_resources() as (rp_socket, robot, model_d, model_c, cap):
             controlPanel = ControlPanel(robot, rp_socket, "Recycling Robot Control Panel")
