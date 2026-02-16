@@ -33,7 +33,8 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     :param cy: Principal point y-coordinate in pixels
     :param z_mm: Estimated depth (Z coordinate) of the object in millimeters
     """
-    logging.info("Size of frame: Width: %d, Height: %d", frame_width, frame_height)
+    logging.info("pixels2mm called with x=%s y=%s w=%s h=%s frame=%dx%d", x_pixel, y_pixel, w_pixel, h_pixel, frame_width, frame_height)
+    logging.debug("Intrinsics: fx=%s fy=%s cx=%s cy=%s z_mm=%s", fx, fy, cx, cy, z_mm)
 
     # Convert pixel center to image coordinates (use box centre)
     x_obj_mid = x_pixel + (w_pixel / 2.0)
@@ -42,10 +43,12 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     # Normalized camera coordinates
     x_n = (x_obj_mid - cx) / fx
     y_n = (y_obj_mid - cy) / fy
+    logging.debug("Normalized coords: x_n=%f y_n=%f", x_n, y_n)
 
     # Back-project to real-world at known Z (pinhole model): X = x_n * Z, Y = y_n * Z
     X_mm = x_n * z_mm
     Y_mm = y_n * z_mm
+    logging.debug("Back-projected (camera coords) X_mm=%f Y_mm=%f at Z=%s", X_mm, Y_mm, z_mm)
 
     # Translate so that image centre maps to HOME_POS (maintain previous coordinate convention)
     # Compute image centre world coords (where u=cx, v=cy)
@@ -57,6 +60,7 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     # Home position is expected to correspond to image centre — offset accordingly
     x_mm = HOME_POS[0] + (X_mm - Xc_mm)
     y_mm = HOME_POS[1] + (Y_mm - Yc_mm)
+    logging.debug("Mapped to robot coords: x_mm=%f y_mm=%f (HOME_POS=%s)", x_mm, y_mm, HOME_POS)
 
     # Sizes: compute mm per pixel at object depth using fx/fy
     mm_per_pixel_x = z_mm / fx
@@ -64,7 +68,9 @@ def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=1080, frame_height
     w_mm = w_pixel * mm_per_pixel_x
     h_mm = h_pixel * mm_per_pixel_y
 
-    logging.debug("Pinhole mapping: x_mid=%f y_mid=%f -> X_mm=%f Y_mm=%f", x_obj_mid, y_obj_mid, x_mm, y_mm)
+    logging.info("Pinhole result: x_mm=%f y_mm=%f w_mm=%f h_mm=%f mm_per_px=(%f,%f)",
+                 x_mm, y_mm, w_mm, h_mm, mm_per_pixel_x, mm_per_pixel_y)
+    logging.debug("Pinhole mapping: x_mid=%f y_mid=%f -> X_mm=%f Y_mm=%f", x_obj_mid, y_obj_mid, X_mm, Y_mm)
     return x_mm, y_mm, w_mm, h_mm
 
 
