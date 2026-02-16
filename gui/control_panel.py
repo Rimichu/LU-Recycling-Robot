@@ -228,7 +228,7 @@ class ControlPanel(tk.Tk):
             x_mm, y_mm, w_mm, h_mm = pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel)
 
             # Robot, x = forward/backward, y = left/right, so needs to be swapped
-            x_mm, y_mm = y_mm + HOME_POS[1], x_mm + HOME_POS[0]
+            x_mm, y_mm = y_mm + HOME_POS[0], x_mm + HOME_POS[1]
 
             logging.info("Object detected at (pixels): X: %d, Y: %d, Width: %d, Height: %d", x_pixel, y_pixel, w_pixel, h_pixel)
             logging.info("Object at (mm): X: %f, Y: %f, Width: %f, Height: %f", x_mm, y_mm, w_mm, h_mm)
