@@ -1,6 +1,6 @@
 CAM_X_ANG = -20.5
 CAM_Y_ANG = 33
-CAM_POS = [150, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos) 
+CAM_POS = [0, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos) 
 
 # All bin positions (x,y) are the same for now, to be updated later
 BIN_DICT = {
@@ -12,7 +12,7 @@ BIN_DICT = {
     5: [477.13, -404]
 }
 
-DETECT_HEIGHT = 1630
+DETECT_HEIGHT = 1628.62
 CLASSIFY_HEIGHT = 330
 OBJECT_HEIGHT = 0
 
@@ -25,9 +25,9 @@ OBJECT_HEIGHT = 0
 # TOOL_ANGLE = [177.74, -0.46, 172.27]
 # POS: x, y, z (mm)
 # Angle: yaw, pitch, roll (degrees)
-HOME_POS = [350, 720, DETECT_HEIGHT]
-# TOOL_ANGLE = [174, 10, -180]
-TOOL_ANGLE = [180, 0, 180] # For testing, to be adjusted later based on camera angle and object position
+HOME_POS = [382, 678, DETECT_HEIGHT]
+TOOL_ANGLE = [173.7, -1.35, 178.0746]
+# TOOL_ANGLE = [180, 0, 180] # For testing, to be adjusted later based on camera angle and object position
 CONVEYOR_HEIGHT = -100 # In relation to robot home position
 
 OFF_POS = [950, 800, OBJECT_HEIGHT]
