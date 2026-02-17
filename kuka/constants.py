@@ -14,7 +14,7 @@ BIN_DICT = {
     5: [477.13, -404]
 }
 
-DETECT_HEIGHT = 1628.62
+DETECT_HEIGHT = 1627.726
 CLASSIFY_HEIGHT = 330
 OBJECT_HEIGHT = 0
 
@@ -27,8 +27,8 @@ OBJECT_HEIGHT = 0
 # TOOL_ANGLE = [177.74, -0.46, 172.27]
 # POS: x, y, z (mm)
 # Angle: yaw, pitch, roll (degrees)
-HOME_POS = [382, 678, DETECT_HEIGHT]
-TOOL_ANGLE = [173.7, -1.35, 178.0746]
+HOME_POS = [402, 884, DETECT_HEIGHT]
+TOOL_ANGLE = [173.6, -1.34, 178.0744]
 # TOOL_ANGLE = [180, 0, 180] # For testing, to be adjusted later based on camera angle and object position
 CONVEYOR_HEIGHT = -100 # In relation to robot home position
 
