@@ -276,7 +276,7 @@ class ControlPanel(tk.Tk):
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame)
 
-        img_pil_resized = img_pil.resize((CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT), Image.LANCZOS)
+        img_pil_resized = img_pil.resize((600, int(600 * CAM_FRAME_HEIGHT / CAM_FRAME_WIDTH)), Image.LANCZOS)
 
         img_tk = ImageTk.PhotoImage(image=img_pil_resized)
 
