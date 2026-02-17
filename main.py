@@ -85,7 +85,7 @@ def initialize_resources():
         # Connect to the Raspberry Pi H.264 camera stream using ffmpeg subprocess
         # Use a background reader thread to avoid blocking the GUI.
         class FFmpegCapture:
-            def __init__(self, host, port, width=640, height=480, reconnect=True):
+            def __init__(self, host, port, width=CAM_FRAME_WIDTH, height=CAM_FRAME_HEIGHT, reconnect=True):
                 self.width = width
                 self.height = height
                 self.frame_size = width * height * 3
