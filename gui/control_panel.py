@@ -4,7 +4,7 @@ from PIL import Image, ImageTk
 import cv2
 import logging
 from events.event import EventLoop
-from kuka.constants import CAM_POS, HOME_POS, TOOL_ANGLE, DETECT_HEIGHT, CONVEYOR_HEIGHT
+from kuka.constants import CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT, CAM_POS, HOME_POS, TOOL_ANGLE, DETECT_HEIGHT, CONVEYOR_HEIGHT
 from vision.detect import process_frame
 from vision.classify import classify_object, dispose_of_object
 from kuka.comms import movehome, pi_reconnect, queuegrip, queuemove, moveOff
@@ -65,10 +65,13 @@ class ControlPanel(tk.Tk):
         
         :param self: Self instance
         """
-        self.frame_video = tk.Frame(self, width=600, height=400, bg="#2596be")
+        widthSize = 600
+        ratio = CAM_FRAME_WIDTH / CAM_FRAME_HEIGHT
+        heightSize = int(widthSize / ratio)
+        self.frame_video = tk.Frame(self, width=widthSize, height=heightSize, bg="#2596be")
         self.frame_video.grid(row=0, column=0, padx=10, pady=10)
 
-        self.label_img = tk.Label(self.frame_video, width=600, height=400, bg="#2596be")
+        self.label_img = tk.Label(self.frame_video, width=widthSize, height=heightSize, bg="#2596be")
         self.label_img.grid(row=0, column=0, padx=10, pady=10)
 
     def create_labels(self):
@@ -265,14 +268,14 @@ class ControlPanel(tk.Tk):
                     self.robot, 
                     self.free_lock, 
                     classify_object(model_c, cap, self.class_label), 
-                    (x_mm + CAM_POS[0], y_mm + CAM_POS[1])
+                    (x_mm - CAM_POS[0], y_mm - CAM_POS[1])
                 )
             )
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         img_pil = Image.fromarray(frame)
 
-        img_pil_resized = img_pil.resize((600, 400), Image.LANCZOS)
+        img_pil_resized = img_pil.resize((CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT), Image.LANCZOS)
 
         img_tk = ImageTk.PhotoImage(image=img_pil_resized)
 
