@@ -4,7 +4,7 @@ import glob
 
 # --- Configuration ---
 # Number of inner corners (cols, rows)
-chessboard_size = (9, 6) 
+chessboard_size = (9, 7)
 # Size of a square in meters (e.g., 0.025m for 25mm)
 square_size = 0.020
 # ---------------------
