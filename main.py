@@ -1,6 +1,7 @@
 from contextlib import contextmanager
 import threading
 import time
+from pathlib import Path
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
 from kuka.constants import CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT
@@ -13,9 +14,25 @@ import socket
 import logging
 
 logger = logging.getLogger(__name__)
+CALIBRATION_DATA_PATH = Path("calibration_data.npz")
 
 # Kuka Robot constants
 LEFT_KUKA_IP_ADDRESS = "192.168.1.195"
+
+def load_camera_calibration(path: Path = CALIBRATION_DATA_PATH):
+    """Load camera matrix + distortion coefficients from .npz calibration output."""
+    if not path.exists():
+        logger.warning("Calibration file not found at %s. Continuing without undistortion.", path)
+        return None, None
+    try:
+        data = np.load(path)
+        camera_matrix = data["mtx"]
+        dist_coeffs = data["dist"]
+        logger.info("Loaded camera calibration from %s", path)
+        return camera_matrix, dist_coeffs
+    except Exception as e:
+        logger.warning("Failed to load calibration (%s). Continuing without undistortion.", e)
+        return None, None
 
 def connect_to_pi(pi_server_address=PI_SERVER_ADDRESS, pi_server_port=PI_SERVER_PORT):
     """
@@ -85,7 +102,7 @@ def initialize_resources():
         # Connect to the Raspberry Pi H.264 camera stream using ffmpeg subprocess
         # Use a background reader thread to avoid blocking the GUI.
         class FFmpegCapture:
-            def __init__(self, host, port, width=CAM_FRAME_WIDTH, height=CAM_FRAME_HEIGHT, reconnect=True):
+            def __init__(self, host, port, width=CAM_FRAME_WIDTH, height=CAM_FRAME_HEIGHT, reconnect=True, camera_matrix=None, dist_coeffs=None):
                 self.width = width
                 self.height = height
                 self.frame_size = width * height * 3
@@ -106,6 +123,24 @@ def initialize_resources():
                 self.latest_frame = None
                 self.lock = threading.Lock()
                 self.running = True
+                self.camera_matrix = camera_matrix
+                self.dist_coeffs = dist_coeffs
+                self.undistort_enabled = camera_matrix is not None and dist_coeffs is not None
+                self.map1 = None
+                self.map2 = None
+                if self.undistort_enabled:
+                    try:
+                        self.map1, self.map2 = cv2.initUndistortRectifyMap(
+                            self.camera_matrix,
+                            self.dist_coeffs,
+                            None,
+                            self.camera_matrix,
+                            (self.width, self.height),
+                            cv2.CV_16SC2,
+                        )
+                    except Exception as e:
+                        logger.warning("Failed to init undistort maps: %s", e)
+                        self.undistort_enabled = False
                 self._start_proc()
                 self.thread = threading.Thread(target=self._reader_loop, daemon=True)
                 self.thread.start()
@@ -143,6 +178,11 @@ def initialize_resources():
                             time.sleep(0.01)
                             continue
                         frame = np.frombuffer(raw, dtype=np.uint8).reshape((self.height, self.width, 3))
+                        if self.undistort_enabled:
+                            try:
+                                frame = cv2.remap(frame, self.map1, self.map2, interpolation=cv2.INTER_LINEAR)
+                            except Exception as e:
+                                logger.debug("Undistort remap failed: %s", e)
                         with self.lock:
                             self.latest_frame = frame
                     except Exception as e:
@@ -171,7 +211,15 @@ def initialize_resources():
                         pass
 
         logger.info(f"Connecting to camera stream at {PI_SERVER_ADDRESS}:{PI_CAMERA_PORT} via ffmpeg")
-        cap = FFmpegCapture(PI_SERVER_ADDRESS, PI_CAMERA_PORT, width=CAM_FRAME_WIDTH, height=CAM_FRAME_HEIGHT)
+        camera_matrix, dist_coeffs = load_camera_calibration()
+        cap = FFmpegCapture(
+            PI_SERVER_ADDRESS,
+            PI_CAMERA_PORT,
+            width=CAM_FRAME_WIDTH,
+            height=CAM_FRAME_HEIGHT,
+            camera_matrix=camera_matrix,
+            dist_coeffs=dist_coeffs,
+        )
         if not cap.isOpened():
             raise RuntimeError("Failed to start ffmpeg capture. Ensure the Pi is streaming and ffmpeg is installed on this host.")
         
