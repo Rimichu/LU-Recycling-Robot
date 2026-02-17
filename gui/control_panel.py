@@ -65,6 +65,7 @@ class ControlPanel(tk.Tk):
         
         :param self: Self instance
         """
+        # Set video frame size based on camera frame dimensions, maintaining aspect ratio
         widthSize = 600
         ratio = CAM_FRAME_HEIGHT / CAM_FRAME_WIDTH
         heightSize = int(widthSize * ratio)

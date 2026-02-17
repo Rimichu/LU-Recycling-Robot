@@ -28,7 +28,7 @@ def start_camera_stream():
         picam2 = Picamera2()
         # Create a simple video configuration
         config = picam2.create_video_configuration({
-            "size": (1080, 1920) # TODO: Larger resolution may cause performance issues;
+            "size": (1280, 720)  # 16:9 to match Pi Camera V3 (IMX708) native aspect ratio
         })
         picam2.configure(config)
         picam2.start()
