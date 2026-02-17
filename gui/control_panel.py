@@ -66,8 +66,8 @@ class ControlPanel(tk.Tk):
         :param self: Self instance
         """
         widthSize = 600
-        ratio = CAM_FRAME_WIDTH / CAM_FRAME_HEIGHT
-        heightSize = int(widthSize / ratio)
+        ratio = CAM_FRAME_HEIGHT / CAM_FRAME_WIDTH
+        heightSize = int(widthSize * ratio)
         self.frame_video = tk.Frame(self, width=widthSize, height=heightSize, bg="#2596be")
         self.frame_video.grid(row=0, column=0, padx=10, pady=10)
 
