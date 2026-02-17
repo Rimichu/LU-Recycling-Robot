@@ -1,7 +1,7 @@
 import socket
 import lgpio
 import servo
-import pi_constants as const
+from pi_constants import *
 import logging
 import threading
 import time
@@ -23,12 +23,12 @@ def start_camera_stream():
         from picamera2.encoders import H264Encoder
         from picamera2.outputs import FileOutput
 
-        logger.info("Using picamera2 for H.264 streaming on port %s", const.PI_CAMERA_PORT)
+        logger.info("Using picamera2 for H.264 streaming on port %s", PI_CAMERA_PORT)
 
         picam2 = Picamera2()
         # Create a simple video configuration
         config = picam2.create_video_configuration({
-            "size": (1280, 720)  # 16:9 to match Pi Camera V3 (IMX708) native aspect ratio
+            "size": (CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT)  # 16:9 to match Pi Camera V3 (IMX708) native aspect ratio
         })
         picam2.configure(config)
         picam2.start()
@@ -36,9 +36,9 @@ def start_camera_stream():
         # TCP listener for clients wanting the H.264 stream
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        server.bind(("0.0.0.0", const.PI_CAMERA_PORT))
+        server.bind(("0.0.0.0", PI_CAMERA_PORT))
         server.listen(1)
-        logger.info("Picamera2 streaming listening on 0.0.0.0:%s", const.PI_CAMERA_PORT)
+        logger.info("Picamera2 streaming listening on 0.0.0.0:%s", PI_CAMERA_PORT)
 
         while True:
             client_socket, addr = server.accept()
@@ -106,12 +106,12 @@ def handle_client(client_socket, client_address, h):
             case "exit":
                 logger.info("Exit command received. Closing connection.")
                 client_socket.close()
-            case const.COMMAND_OPEN:
+            case _ if command ==COMMAND_OPEN:
                 logger.info("Open command received.")
-                servo.open_claw(h, const.ANTICLOCKWISE_PIN, const.CLOCKWISE_PIN)  # Open claw
-            case const.COMMAND_CLOSE:
+                servo.open_claw(h, ANTICLOCKWISE_PIN, CLOCKWISE_PIN)  # Open claw
+            case _ if command == COMMAND_CLOSE:
                 logger.info("Close command received.")
-                servo.close_claw(h, const.CLOCKWISE_PIN, const.ANTICLOCKWISE_PIN)      # Close claw
+                servo.close_claw(h, CLOCKWISE_PIN, ANTICLOCKWISE_PIN)      # Close claw
             case _ if command.startswith("ping"):
                 logger.info("Ping received, sending pong...")
                 client_socket.sendall(b"pong")
@@ -151,8 +151,8 @@ if __name__ == "__main__":
     h = lgpio.gpiochip_open(0)
 
     # Claim GPIOs as outputs and set initial state to LOW
-    lgpio.gpio_claim_output(h, const.CLOCKWISE_PIN, const.LOW)
-    lgpio.gpio_claim_output(h, const.ANTICLOCKWISE_PIN, const.LOW)
+    lgpio.gpio_claim_output(h, CLOCKWISE_PIN, LOW)
+    lgpio.gpio_claim_output(h, ANTICLOCKWISE_PIN, LOW)
 
     HOST = "0.0.0.0" # Listen on all interfaces
     PORT = 5050      # Arbitrary non-privileged port
