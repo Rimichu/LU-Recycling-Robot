@@ -1,6 +1,8 @@
 CAM_X_ANG = -20.5
 CAM_Y_ANG = 33
-CAM_POS = [0, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos) 
+CAM_POS = [0, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos)
+CAM_FRAME_WIDTH = 640
+CAM_FRAME_HEIGHT = 480
 
 # All bin positions (x,y) are the same for now, to be updated later
 BIN_DICT = {

@@ -3,6 +3,7 @@ import threading
 import time
 from gui.control_panel import ControlPanel
 from kuka_comm_lib import KukaRobot
+from kuka.constants import CAM_FRAME_WIDTH, CAM_FRAME_HEIGHT
 from rp.pi_constants import PI_SERVER_ADDRESS, PI_SERVER_PORT, PI_CAMERA_PORT
 import cv2
 import subprocess
@@ -170,7 +171,7 @@ def initialize_resources():
                         pass
 
         logger.info(f"Connecting to camera stream at {PI_SERVER_ADDRESS}:{PI_CAMERA_PORT} via ffmpeg")
-        cap = FFmpegCapture(PI_SERVER_ADDRESS, PI_CAMERA_PORT, width=640, height=480)
+        cap = FFmpegCapture(PI_SERVER_ADDRESS, PI_CAMERA_PORT, width=CAM_FRAME_WIDTH, height=CAM_FRAME_HEIGHT)
         if not cap.isOpened():
             raise RuntimeError("Failed to start ffmpeg capture. Ensure the Pi is streaming and ffmpeg is installed on this host.")
         

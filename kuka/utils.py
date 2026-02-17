@@ -15,8 +15,8 @@ def calculate_base(angle_degrees, height):
     
     return base
 
-def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=640, frame_height=320,
-              fx: float = 410, fy: float = 410, cx: float = 320, cy: float = 160,
+def pixels2mm(x_pixel, y_pixel, w_pixel, h_pixel, frame_width=CAM_FRAME_WIDTH, frame_height=CAM_FRAME_HEIGHT,
+              fx: float = 410, fy: float = 410, cx: float = CAM_FRAME_WIDTH/2, cy: float = CAM_FRAME_HEIGHT/2,
               z_mm: float = DETECT_HEIGHT - CONVEYOR_HEIGHT):
     """
     Convert pixel coordinates and dimensions to millimeter displacements from the camera center.
