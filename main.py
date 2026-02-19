@@ -14,7 +14,7 @@ import socket
 import logging
 
 logger = logging.getLogger(__name__)
-CALIBRATION_DATA_PATH = Path("calibration_data.npz")
+CALIBRATION_DATA_PATH = Path("./vision/calibration_data.npz")
 
 # Kuka Robot constants
 LEFT_KUKA_IP_ADDRESS = "192.168.1.195"
