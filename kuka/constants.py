@@ -2,7 +2,7 @@ import rp.pi_constants as const
 
 CAM_X_ANG = -20.5
 CAM_Y_ANG = 33
-CAM_POS = [0, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos)
+CAM_POS = [150, 0] # Position of camera relative to robot current position (assume height is same as robot Z pos)
 CAM_FRAME_WIDTH = const.CAM_FRAME_WIDTH
 CAM_FRAME_HEIGHT = const.CAM_FRAME_HEIGHT
 

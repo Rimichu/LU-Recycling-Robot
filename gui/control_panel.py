@@ -269,7 +269,7 @@ class ControlPanel(tk.Tk):
                     self.robot, 
                     self.free_lock, 
                     classify_object(model_c, cap, self.class_label), 
-                    (x_mm - CAM_POS[0], y_mm - CAM_POS[1])
+                    (x_mm + CAM_POS[0], y_mm + CAM_POS[1])
                 )
             )
 
