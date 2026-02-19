@@ -7,11 +7,10 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=kuka
-# Use repo dir (exists) so systemd won't fail before ExecStartPre creates local
 WorkingDirectory=/home/kuka/LU-Recycling-Robot
 
-# Ensure local/ exists
-ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
+# Ensure local/ exists (use shell to avoid relying on exact mkdir binary path)
+ExecStartPre=/bin/sh -c 'mkdir -p /home/kuka/LU-Recycling-Robot/local'
 
 # Sync rp/ -> local/ on every start (exclude unit files)
 ExecStartPre=/usr/bin/rsync -av --checksum --delete \
