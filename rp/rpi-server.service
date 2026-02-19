@@ -7,7 +7,8 @@ Wants=network-online.target
 [Service]
 Type=simple
 User=kuka
-WorkingDirectory=/home/kuka/LU-Recycling-Robot/local
+# Use repo dir (exists) so systemd won't fail before ExecStartPre creates local
+WorkingDirectory=/home/kuka/LU-Recycling-Robot
 
 # Ensure local/ exists
 ExecStartPre=/bin/mkdir -p /home/kuka/LU-Recycling-Robot/local
@@ -29,8 +30,8 @@ if [ -f "$SRC" ] && ! cmp -s "$SRC" "$DST"; then \
   exit 1; \
 fi'
 
-# Run from local
-ExecStart=/usr/bin/python3 -u /home/kuka/LU-Recycling-Robot/local/server.py
+# Run from local (change ExecStart to cd into local at runtime)
+ExecStart=/bin/bash -lc 'cd /home/kuka/LU-Recycling-Robot/local && exec /usr/bin/python3 -u /home/kuka/LU-Recycling-Robot/local/server.py'
 
 Restart=on-failure
 RestartSec=2
