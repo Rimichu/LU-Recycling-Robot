@@ -14,6 +14,7 @@ import socket
 import logging
 
 logger = logging.getLogger(__name__)
+# Calibrate Camera using py file in ./testRP/cameraCalibrate and move output to .vision/
 CALIBRATION_DATA_PATH = Path("./vision/calibration_data.npz")
 
 # Kuka Robot constants
