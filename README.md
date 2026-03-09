@@ -7,19 +7,6 @@ $ conda env create -f env.yaml
 $ conda activate kuka
 ```
 
-## Credits 
-
-- Matias Barandiaran
-- Parichay Sachdev
-- Mustafa Azizi
-- Athar Syed
-- Osvaldo Catine
-- Mikelis Kamepe
-- Inderjot Sitt
-- Isaac Richardson
-- Andre Mariucci
-- Toby Vermon
-
 # Original Project
 
 https://github.com/LUComp/waste-sorter
