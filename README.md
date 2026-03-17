@@ -11,3 +11,7 @@ $ conda activate kuka
 
 Feel free to access the Documentation from the Documenation folder.
 I have included all files so that it could be easily extended using Overleaf or other LaTeX editors.
+
+# Original Project
+
+https://github.com/LUComp/waste-sorter
